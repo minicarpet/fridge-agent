@@ -12,6 +12,7 @@ from fridge_agent.settings import (
     get_settings,
     update_settings,
 )
+from fridge_agent.meal_plans import generate_plan
 
 
 async def index(request: web.Request) -> web.Response:
@@ -77,6 +78,11 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_put(
         "/api/settings",
         update_settings,
+    )
+
+    app.router.add_post(
+        "/api/meal-plans/generate",
+        generate_plan,
     )
 
     return app

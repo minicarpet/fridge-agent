@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -29,6 +30,22 @@ FoodUnit = Literal[
     "unknown",
 ]
 
+MealType = Literal[
+    "lunch",
+    "dinner",
+]
+
+RecipeUnit = Literal[
+    "g",
+    "kg",
+    "ml",
+    "l",
+    "piece",
+    "pack",
+    "bottle",
+    "jar",
+    "can",
+]
 
 class DetectedFood(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -95,3 +112,34 @@ class HouseholdSettings(BaseModel):
     avoided_foods: list[str]
 
     notes: str = ""
+
+class MealIngredient(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    quantity: float = Field(gt=0)
+    unit: RecipeUnit
+
+
+class PlannedMeal(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date: date
+    meal_type: MealType
+
+    title: str
+    servings: int = Field(ge=1, le=20)
+
+    preparation_minutes: int = Field(ge=0, le=240)
+    cooking_minutes: int = Field(ge=0, le=360)
+
+    ingredients: list[MealIngredient]
+    steps: list[str]
+
+    notes: str
+
+
+class GeneratedMealPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    meals: list[PlannedMeal]

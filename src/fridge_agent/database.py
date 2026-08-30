@@ -136,6 +136,65 @@ def initialize_database(data_dir: Path) -> Path:
             """
         )
 
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meal_plans (
+                id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                start_date TEXT NOT NULL,
+                planning_days INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                model TEXT,
+                response_id TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                error TEXT
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meal_plan_meals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meal_plan_id TEXT NOT NULL,
+                meal_date TEXT NOT NULL,
+                meal_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                servings INTEGER NOT NULL,
+                preparation_minutes INTEGER NOT NULL,
+                cooking_minutes INTEGER NOT NULL,
+                notes TEXT NOT NULL,
+                FOREIGN KEY(meal_plan_id) REFERENCES meal_plans(id)
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meal_plan_ingredients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meal_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                quantity REAL NOT NULL,
+                unit TEXT NOT NULL,
+                FOREIGN KEY(meal_id) REFERENCES meal_plan_meals(id)
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meal_plan_steps (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meal_id INTEGER NOT NULL,
+                step_index INTEGER NOT NULL,
+                instruction TEXT NOT NULL,
+                FOREIGN KEY(meal_id) REFERENCES meal_plan_meals(id)
+            )
+            """
+        )
+
         connection.commit()
 
     return database_path

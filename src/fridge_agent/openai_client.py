@@ -1,9 +1,13 @@
+import json
 import base64
 from pathlib import Path
 
 import httpx
 
-from fridge_agent.models import FridgeAnalysis
+from fridge_agent.models import (
+    FridgeAnalysis,
+    GeneratedMealPlan,
+)
 
 
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
@@ -24,6 +28,126 @@ Rules:
 - Confidence must represent how certain the visual identification is.
 - Use warnings for important uncertainty or visibility problems.
 """
+
+MEAL_PLAN_INSTRUCTIONS = """
+You are the meal planner for a household.
+
+Generate practical recipes based on the supplied household settings,
+preferences and current refrigerator inventory.
+
+Rules:
+- Write recipe titles, ingredient names, instructions and notes in French.
+- Generate exactly the requested dates and meal types.
+- Respect avoided foods strictly.
+- Favor liked foods and cuisines when practical.
+- Prioritize ingredients already present in the inventory.
+- Prefer using perishable refrigerator ingredients before buying alternatives.
+- Every meal must be suitable for the requested number of people.
+- Respect weekday and weekend cooking-time limits.
+- Ingredients must represent the complete quantity required for the recipe.
+- Use only the units allowed by the schema.
+- Do not omit ingredients just because they are common pantry staples.
+- Do not invent that an ingredient exists in the inventory.
+- Keep recipes realistic and reasonably simple.
+- Vary meals during the planning period.
+- Always provide the notes field for every meal.
+- Use an empty string when there is no specific note.
+"""
+
+MEAL_PLAN_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "meals": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                    },
+                    "meal_type": {
+                        "type": "string",
+                        "enum": [
+                            "lunch",
+                            "dinner",
+                        ],
+                    },
+                    "title": {
+                        "type": "string",
+                    },
+                    "servings": {
+                        "type": "integer",
+                    },
+                    "preparation_minutes": {
+                        "type": "integer",
+                    },
+                    "cooking_minutes": {
+                        "type": "integer",
+                    },
+                    "ingredients": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                },
+                                "quantity": {
+                                    "type": "number",
+                                },
+                                "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                        "g",
+                                        "kg",
+                                        "ml",
+                                        "l",
+                                        "piece",
+                                        "pack",
+                                        "bottle",
+                                        "jar",
+                                        "can",
+                                    ],
+                                },
+                            },
+                            "required": [
+                                "name",
+                                "quantity",
+                                "unit",
+                            ],
+                            "additionalProperties": False,
+                        },
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                        },
+                    },
+                    "notes": {
+                        "type": "string",
+                    },
+                },
+                "required": [
+                    "date",
+                    "meal_type",
+                    "title",
+                    "servings",
+                    "preparation_minutes",
+                    "cooking_minutes",
+                    "ingredients",
+                    "steps",
+                    "notes",
+                ],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": [
+        "meals",
+    ],
+    "additionalProperties": False,
+}
 
 
 class OpenAIError(RuntimeError):
@@ -147,3 +271,88 @@ async def analyze_fridge(
     }
 
     return analysis, metadata
+
+async def generate_meal_plan(
+    *,
+    context: dict,
+    api_key: str,
+    model: str,
+) -> tuple[GeneratedMealPlan, dict]:
+    payload = {
+        "model": model,
+        "store": False,
+        "reasoning": {
+            "effort": "low",
+        },
+        "instructions": MEAL_PLAN_INSTRUCTIONS,
+        "input": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": json.dumps(
+                            context,
+                            ensure_ascii=False,
+                        ),
+                    }
+                ],
+            }
+        ],
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "meal_plan",
+                "strict": True,
+                "schema": MEAL_PLAN_SCHEMA,
+            }
+        },
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    async with httpx.AsyncClient(
+        timeout=120.0
+    ) as client:
+        response = await client.post(
+            OPENAI_RESPONSES_URL,
+            headers=headers,
+            json=payload,
+        )
+
+    if response.is_error:
+        try:
+            error = response.json()["error"]["message"]
+        except (ValueError, KeyError, TypeError):
+            error = response.text
+
+        raise OpenAIError(
+            f"OpenAI returned HTTP "
+            f"{response.status_code}: {error}"
+        )
+
+    response_data = response.json()
+
+    output_text = _extract_output_text(
+        response_data
+    )
+
+    try:
+        plan = GeneratedMealPlan.model_validate_json(
+            output_text
+        )
+    except ValueError as exception:
+        raise OpenAIError(
+            "Invalid meal plan returned by OpenAI"
+        ) from exception
+
+    metadata = {
+        "response_id": response_data.get("id"),
+        "model": response_data.get("model"),
+        "usage": response_data.get("usage", {}),
+    }
+
+    return plan, metadata
