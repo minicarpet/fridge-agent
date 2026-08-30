@@ -16,12 +16,113 @@ Placards · Fridge Agent
         </h1>
 
         <p class="page-description">
-            Produits secs et épicerie disponibles.
+            Produits secs, épicerie et ingrédients
+            disponibles hors du réfrigérateur.
         </p>
     </div>
+
+    <button
+        type="button"
+        id="add-pantry-item"
+        class="button secondary"
+    >
+        + Ajouter un produit
+    </button>
 </header>
 
-<div class="placeholder">
-    Cette vue sera activée à la prochaine étape.
-</div>
+<div
+    id="pantry-error"
+    class="alert error"
+    hidden
+></div>
+
+<div
+    id="pantry-success"
+    class="alert success"
+    hidden
+></div>
+
+<section class="panel">
+    <div class="panel-header panel-header-row">
+        <div>
+            <h2>
+                Inventaire des placards
+            </h2>
+
+            <p id="pantry-summary">
+                Chargement...
+            </p>
+        </div>
+
+        <strong
+            class="inventory-count"
+            id="pantry-count"
+        >
+            —
+        </strong>
+    </div>
+
+    <div id="pantry-empty" hidden>
+        <div class="empty-state">
+            <strong>
+                Aucun produit enregistré
+            </strong>
+
+            <span>
+                Ajoutez les produits courants présents
+                dans vos placards.
+            </span>
+        </div>
+    </div>
+
+    <div class="pantry-header">
+        <span>Produit</span>
+        <span>Quantité</span>
+        <span>Unité</span>
+        <span></span>
+    </div>
+
+    <div id="pantry-items"></div>
+
+    <div class="pantry-footer">
+        <span
+            id="pantry-dirty"
+            class="unsaved-indicator"
+            hidden
+        >
+            Modifications non enregistrées
+        </span>
+
+        <button
+            type="button"
+            id="save-pantry"
+            class="button primary"
+        >
+            Enregistrer
+        </button>
+    </div>
+</section>
+
+<section class="panel pantry-help">
+    <div class="panel-header">
+        <h2>
+            Quantité inconnue
+        </h2>
+
+        <p>
+            Si vous savez qu'un produit est présent mais
+            pas sa quantité exacte, laissez la quantité
+            vide et sélectionnez « inconnue ».
+        </p>
+    </div>
+
+    <p class="page-description">
+        La liste de courses le signalera alors comme
+        produit à vérifier au lieu d'inventer une quantité.
+    </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/pantry.js"></script>
 {% endblock %}
