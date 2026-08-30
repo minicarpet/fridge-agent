@@ -1,571 +1,183 @@
-<!doctype html>
+{% extends "base.html" %}
 
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
+{% block title %}
+Frigo · Fridge Agent
+{% endblock %}
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">
+            Inventaire
+        </p>
 
-    <title>Fridge Agent</title>
+        <h1>
+            Réfrigérateur
+        </h1>
 
-    <style>
-        body {
-            font-family: sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+        <p class="page-description">
+            Consultez l'inventaire actuel ou scannez
+            le réfrigérateur pour le mettre à jour.
+        </p>
+    </div>
+</header>
 
-        button {
-            margin-top: 20px;
-            margin-right: 10px;
-            padding: 12px 20px;
-        }
+<div
+    id="fridge-error"
+    class="alert error"
+    hidden
+></div>
 
-        input,
-        select {
-            padding: 8px;
-        }
+<section class="fridge-layout">
+    <article class="panel inventory-panel">
+        <div class="panel-header panel-header-row">
+            <div>
+                <h2>
+                    Inventaire actuel
+                </h2>
 
-        #images {
-            display: block;
-            margin-top: 20px;
-        }
+                <p id="inventory-summary">
+                    Chargement...
+                </p>
+            </div>
 
-        #result {
-            margin-top: 30px;
-            white-space: pre-wrap;
-        }
+            <strong
+                class="inventory-count"
+                id="inventory-count"
+            >
+                —
+            </strong>
+        </div>
 
-        #warnings {
-            margin: 20px 0;
-        }
+        <div id="inventory-empty" hidden>
+            <div class="empty-state">
+                <strong>
+                    Aucun produit connu
+                </strong>
 
-        .warning {
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #fff3cd;
-            border: 1px solid #ffe69c;
-        }
+                <span>
+                    Effectuez un premier scan du
+                    réfrigérateur.
+                </span>
+            </div>
+        </div>
 
-        .food-item {
-            display: grid;
-            grid-template-columns:
-                minmax(180px, 2fr)
-                minmax(110px, 1fr)
-                100px
-                120px
-                80px
-                auto;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 12px;
-        }
+        <div id="inventory-groups"></div>
+    </article>
 
-        .food-item button {
-            margin: 0;
-            padding: 8px 12px;
-        }
+    <article class="panel scanner-panel">
+        <div class="panel-header">
+            <h2>
+                Nouveau scan
+            </h2>
 
-        @media (max-width: 700px) {
-            .food-item {
-                grid-template-columns: 1fr;
-                padding: 15px 0;
-                border-bottom: 1px solid #ddd;
-            }
-        }
-    </style>
-</head>
+            <p>
+                Prenez idéalement 2 à 4 photos sous
+                différents angles.
+            </p>
+        </div>
 
-<body>
-    <h1>Fridge Agent</h1>
+        <form id="scan-form">
+            <label
+                class="upload-box"
+                for="images"
+            >
+                <strong>
+                    Sélectionner les photos
+                </strong>
 
-    <h2>Scanner le réfrigérateur</h2>
+                <span>
+                    JPEG, PNG ou WebP
+                </span>
 
-    <p>
-        Sélectionnez plusieurs photos du réfrigérateur.
-    </p>
+                <input
+                    type="file"
+                    id="images"
+                    name="images"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    required
+                >
+            </label>
 
-    <form id="scan-form">
-        <input
-            type="file"
-            id="images"
-            name="images"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            required
+            <div
+                id="photo-preview"
+                class="photo-preview"
+            ></div>
+
+            <button
+                type="submit"
+                id="scan-button"
+                class="button primary full-width"
+            >
+                Analyser le réfrigérateur
+            </button>
+        </form>
+
+        <div
+            id="scan-status"
+            class="scan-status"
+            hidden
+        ></div>
+    </article>
+</section>
+
+<section
+    id="analysis"
+    class="panel review-panel"
+    hidden
+>
+    <div class="panel-header panel-header-row">
+        <div>
+            <h2>
+                Vérification
+            </h2>
+
+            <p>
+                Corrigez les produits détectés avant
+                de remplacer l'inventaire actuel.
+            </p>
+        </div>
+
+        <span
+            class="review-count"
+            id="review-count"
+        ></span>
+    </div>
+
+    <div id="warnings"></div>
+
+    <div class="review-header">
+        <span>Produit</span>
+        <span>Catégorie</span>
+        <span>Quantité</span>
+        <span>Unité</span>
+        <span>Confiance</span>
+        <span></span>
+    </div>
+
+    <div id="items"></div>
+
+    <div class="review-actions">
+        <button
+            type="button"
+            id="add-item"
+            class="button secondary"
         >
-
-        <button type="submit" id="scan-button">
-            Scanner le réfrigérateur
-        </button>
-    </form>
-
-    <div id="result"></div>
-
-    <section id="analysis" hidden>
-        <h2>Produits détectés</h2>
-
-        <div id="warnings"></div>
-
-        <div id="items"></div>
-
-        <button type="button" id="add-item">
             + Ajouter un produit
         </button>
 
-        <button type="button" id="confirm">
+        <button
+            type="button"
+            id="confirm"
+            class="button primary"
+        >
             Confirmer l'inventaire
         </button>
-    </section>
-
-    <script>
-        const UNITS = [
-            "piece",
-            "g",
-            "kg",
-            "ml",
-            "l",
-            "pack",
-            "bottle",
-            "jar",
-            "can",
-            "unknown"
-        ];
-
-        const CATEGORIES = [
-            "vegetable",
-            "fruit",
-            "meat",
-            "fish",
-            "dairy",
-            "egg",
-            "drink",
-            "condiment",
-            "prepared_food",
-            "other"
-        ];
-
-        let currentScanId = null;
-        let detectedItems = [];
-
-        const form =
-            document.getElementById("scan-form");
-
-        const scanButton =
-            document.getElementById("scan-button");
-
-        const result =
-            document.getElementById("result");
-
-        const analysisSection =
-            document.getElementById("analysis");
-
-        const itemsContainer =
-            document.getElementById("items");
-
-        const warningsContainer =
-            document.getElementById("warnings");
-
-        const confirmButton =
-            document.getElementById("confirm");
-
-
-        function escapeHtml(value) {
-            const div = document.createElement("div");
-
-            div.textContent = value ?? "";
-
-            return div.innerHTML;
-        }
-
-
-        function optionList(values, selected) {
-            return values
-                .map(value => `
-                    <option
-                        value="${value}"
-                        ${value === selected ? "selected" : ""}
-                    >
-                        ${value}
-                    </option>
-                `)
-                .join("");
-        }
-
-
-        function renderWarnings(warnings) {
-            warningsContainer.innerHTML = "";
-
-            if (!warnings || warnings.length === 0) {
-                return;
-            }
-
-            for (const warning of warnings) {
-                const element =
-                    document.createElement("div");
-
-                element.className = "warning";
-                element.textContent = warning;
-
-                warningsContainer.appendChild(element);
-            }
-        }
-
-
-        function renderItems() {
-            itemsContainer.innerHTML = "";
-
-            detectedItems.forEach((item, index) => {
-                const row =
-                    document.createElement("div");
-
-                row.className = "food-item";
-
-                row.innerHTML = `
-                    <input
-                        data-field="name"
-                        data-index="${index}"
-                        value="${escapeHtml(item.name)}"
-                        placeholder="Produit"
-                    >
-
-                    <select
-                        data-field="category"
-                        data-index="${index}"
-                    >
-                        ${optionList(
-                            CATEGORIES,
-                            item.category
-                        )}
-                    </select>
-
-                    <input
-                        data-field="quantity"
-                        data-index="${index}"
-                        type="number"
-                        min="0"
-                        step="any"
-                        value="${item.quantity ?? ""}"
-                        placeholder="Quantité"
-                    >
-
-                    <select
-                        data-field="unit"
-                        data-index="${index}"
-                    >
-                        ${optionList(
-                            UNITS,
-                            item.unit
-                        )}
-                    </select>
-
-                    <span>
-                        ${
-                            item.confidence === null ||
-                            item.confidence === undefined
-                                ? ""
-                                : `${Math.round(
-                                    item.confidence * 100
-                                )} %`
-                        }
-                    </span>
-
-                    <button
-                        type="button"
-                        data-delete="${index}"
-                    >
-                        Supprimer
-                    </button>
-                `;
-
-                itemsContainer.appendChild(row);
-            });
-
-            bindEditors();
-        }
-
-
-        function bindEditors() {
-            document
-                .querySelectorAll("[data-field]")
-                .forEach(element => {
-                    element.addEventListener(
-                        "change",
-                        () => {
-                            const index =
-                                Number(
-                                    element.dataset.index
-                                );
-
-                            const field =
-                                element.dataset.field;
-
-                            if (field === "quantity") {
-                                detectedItems[index][field] =
-                                    element.value === ""
-                                        ? null
-                                        : Number(
-                                            element.value
-                                        );
-                            } else {
-                                detectedItems[index][field] =
-                                    element.value;
-                            }
-                        }
-                    );
-                });
-
-            document
-                .querySelectorAll("[data-delete]")
-                .forEach(button => {
-                    button.addEventListener(
-                        "click",
-                        () => {
-                            const index =
-                                Number(
-                                    button.dataset.delete
-                                );
-
-                            detectedItems.splice(
-                                index,
-                                1
-                            );
-
-                            renderItems();
-                        }
-                    );
-                });
-        }
-
-
-        async function readError(response) {
-            try {
-                return await response.text();
-            } catch {
-                return `HTTP ${response.status}`;
-            }
-        }
-
-
-        form.addEventListener(
-            "submit",
-            async event => {
-                event.preventDefault();
-
-                const input =
-                    document.getElementById("images");
-
-                if (input.files.length === 0) {
-                    result.textContent =
-                        "Sélectionnez au moins une photo.";
-                    return;
-                }
-
-                const data = new FormData();
-
-                for (const file of input.files) {
-                    data.append("images", file);
-                }
-
-                analysisSection.hidden = true;
-                detectedItems = [];
-                currentScanId = null;
-
-                scanButton.disabled = true;
-
-                try {
-                    result.textContent =
-                        "Envoi des photos...";
-
-                    const uploadResponse = await fetch(
-                        "/api/fridge/scans",
-                        {
-                            method: "POST",
-                            body: data
-                        }
-                    );
-
-                    if (!uploadResponse.ok) {
-                        const error =
-                            await readError(
-                                uploadResponse
-                            );
-
-                        result.textContent =
-                            `Erreur pendant l'envoi : ${error}`;
-                        return;
-                    }
-
-                    const upload =
-                        await uploadResponse.json();
-
-                    currentScanId = upload.id;
-
-                    result.textContent =
-                        "Analyse du réfrigérateur par l'IA...";
-
-                    const analyzeResponse = await fetch(
-                        `/api/fridge/scans/` +
-                        `${currentScanId}/analyze`,
-                        {
-                            method: "POST"
-                        }
-                    );
-
-                    if (!analyzeResponse.ok) {
-                        const error =
-                            await readError(
-                                analyzeResponse
-                            );
-
-                        result.textContent =
-                            `Erreur pendant l'analyse IA : ` +
-                            error;
-
-                        return;
-                    }
-
-                    const analyzed =
-                        await analyzeResponse.json();
-
-                    detectedItems =
-                        analyzed.analysis.items;
-
-                    renderWarnings(
-                        analyzed.analysis.warnings
-                    );
-
-                    renderItems();
-
-                    analysisSection.hidden = false;
-
-                    result.textContent =
-                        `${detectedItems.length} ` +
-                        `produits détectés. ` +
-                        `Vérifiez-les avant confirmation.`;
-
-                } catch (error) {
-                    console.error(error);
-
-                    result.textContent =
-                        "Erreur de communication avec " +
-                        "Fridge Agent.";
-
-                } finally {
-                    scanButton.disabled = false;
-                }
-            }
-        );
-
-
-        document
-            .getElementById("add-item")
-            .addEventListener(
-                "click",
-                () => {
-                    detectedItems.push({
-                        name: "",
-                        category: "other",
-                        quantity: null,
-                        unit: "unknown",
-                        confidence: null,
-                        notes: null
-                    });
-
-                    renderItems();
-                }
-            );
-
-
-        confirmButton.addEventListener(
-            "click",
-            async () => {
-                if (!currentScanId) {
-                    result.textContent =
-                        "Aucun scan à confirmer.";
-                    return;
-                }
-
-                const invalidItem =
-                    detectedItems.find(
-                        item =>
-                            !item.name ||
-                            item.name.trim() === ""
-                    );
-
-                if (invalidItem) {
-                    result.textContent =
-                        "Tous les produits doivent " +
-                        "avoir un nom.";
-                    return;
-                }
-
-                const items =
-                    detectedItems.map(item => ({
-                        name: item.name.trim(),
-                        category: item.category,
-                        quantity: item.quantity,
-                        unit: item.unit,
-                        notes: item.notes
-                    }));
-
-                confirmButton.disabled = true;
-
-                result.textContent =
-                    "Enregistrement de l'inventaire...";
-
-                try {
-                    const response = await fetch(
-                        `/api/fridge/scans/` +
-                        `${currentScanId}/confirm`,
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-                            body: JSON.stringify({
-                                items: items
-                            })
-                        }
-                    );
-
-                    if (!response.ok) {
-                        const error =
-                            await readError(response);
-
-                        result.textContent =
-                            `Impossible d'enregistrer ` +
-                            `l'inventaire : ${error}`;
-
-                        return;
-                    }
-
-                    const body =
-                        await response.json();
-
-                    result.textContent =
-                        `Inventaire enregistré : ` +
-                        `${body.inventory_count} produits.`;
-
-                    analysisSection.hidden = true;
-
-                } catch (error) {
-                    console.error(error);
-
-                    result.textContent =
-                        "Erreur de communication pendant " +
-                        "l'enregistrement.";
-
-                } finally {
-                    confirmButton.disabled = false;
-                }
-            }
-        );
-    </script>
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/fridge.js"></script>
+{% endblock %}
