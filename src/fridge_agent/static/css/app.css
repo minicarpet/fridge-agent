@@ -421,6 +421,10 @@ a {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -531,6 +535,16 @@ a {
             130px
             42px;
     }
+
+    .preferences-layout,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .choice-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -578,6 +592,31 @@ a {
 
 
     .unsaved-indicator {
+        text-align: center;
+    }
+
+    .tag-input-row {
+        flex-direction: column;
+    }
+
+
+    .tag-input-row .button {
+        width: 100%;
+    }
+
+
+    .settings-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .settings-footer .button {
+        width: 100%;
+    }
+
+
+    .settings-footer .unsaved-indicator {
         text-align: center;
     }
 }
@@ -1042,4 +1081,300 @@ a {
 
 .pantry-help {
     margin-top: 24px;
+}
+
+.settings-layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.2fr)
+        minmax(280px, 0.8fr);
+
+    gap: 24px;
+
+    margin-bottom: 24px;
+}
+
+
+.preferences-layout {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 24px;
+
+    margin-bottom: 24px;
+}
+
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.form-field > span,
+.form-label {
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+
+.form-field input,
+.form-field textarea,
+.tag-input-row input {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    color: var(--text);
+    background: var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 9px;
+
+    font: inherit;
+}
+
+
+.form-field input {
+    min-height: 44px;
+}
+
+
+.form-field textarea {
+    resize: vertical;
+
+    min-height: 110px;
+}
+
+
+.form-field input:focus,
+.form-field textarea:focus,
+.tag-input-row input:focus {
+    outline:
+        2px solid var(--primary-soft);
+
+    border-color: var(--primary);
+}
+
+
+.settings-section {
+    margin-top: 24px;
+}
+
+
+.choice-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-top: 10px;
+}
+
+
+.choice-card {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    background:
+        var(--surface-secondary);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 11px;
+
+    cursor: pointer;
+}
+
+
+.choice-card input {
+    flex: 0 0 auto;
+
+    width: 18px;
+    height: 18px;
+
+    margin-top: 2px;
+
+    accent-color:
+        var(--primary);
+}
+
+
+.choice-card span {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.choice-card small {
+    color:
+        var(--text-secondary);
+
+    line-height: 1.4;
+}
+
+
+.input-with-unit {
+    display: flex;
+
+    align-items: center;
+
+    overflow: hidden;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 9px;
+
+    background:
+        var(--surface);
+}
+
+
+.input-with-unit input {
+    flex: 1;
+
+    border: 0;
+    border-radius: 0;
+}
+
+
+.input-with-unit span {
+    padding:
+        0 14px;
+
+    color:
+        var(--text-secondary);
+}
+
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    min-height: 38px;
+
+    margin-bottom: 16px;
+}
+
+
+.tag {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        7px 9px
+        7px 12px;
+
+    color:
+        var(--primary);
+
+    background:
+        var(--primary-soft);
+
+    border-radius: 999px;
+
+    font-size: 14px;
+}
+
+
+.tag-avoid {
+    color:
+        var(--danger);
+
+    background:
+        var(--danger-soft);
+}
+
+
+.tag button {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    padding: 0;
+
+    color: inherit;
+    background: transparent;
+
+    border: 0;
+
+    font-size: 17px;
+
+    cursor: pointer;
+}
+
+
+.tag-empty {
+    color:
+        var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+.tag-input-row {
+    display: flex;
+
+    gap: 10px;
+}
+
+
+.tag-input-row input {
+    flex: 1;
+}
+
+
+.settings-notes {
+    margin-bottom: 24px;
+}
+
+
+.settings-footer {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 18px;
+
+    padding-bottom: 20px;
 }

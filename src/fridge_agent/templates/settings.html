@@ -8,7 +8,7 @@ Paramètres · Fridge Agent
 <header class="page-header">
     <div>
         <p class="eyebrow">
-            Inventaire
+            Configuration
         </p>
 
         <h1>
@@ -16,12 +16,293 @@ Paramètres · Fridge Agent
         </h1>
 
         <p class="page-description">
-            Gérez les paramètres de votre compte et de l'application.
+            Configurez le foyer et les préférences utilisées
+            pour générer vos menus.
         </p>
     </div>
 </header>
 
-<div class="placeholder">
-    Cette vue sera activée à la prochaine étape.
-</div>
+<div
+    id="settings-error"
+    class="alert error"
+    hidden
+></div>
+
+<div
+    id="settings-success"
+    class="alert success"
+    hidden
+></div>
+
+<form id="settings-form">
+    <section class="settings-layout">
+        <article class="panel">
+            <div class="panel-header">
+                <h2>
+                    Foyer
+                </h2>
+
+                <p>
+                    Paramètres généraux de planification.
+                </p>
+            </div>
+
+            <div class="form-grid">
+                <label class="form-field">
+                    <span>
+                        Nombre de personnes
+                    </span>
+
+                    <input
+                        id="people"
+                        type="number"
+                        min="1"
+                        max="20"
+                        required
+                    >
+                </label>
+
+                <label class="form-field">
+                    <span>
+                        Nombre de jours
+                    </span>
+
+                    <input
+                        id="planning-days"
+                        type="number"
+                        min="1"
+                        max="14"
+                        required
+                    >
+                </label>
+            </div>
+
+            <div class="settings-section">
+                <span class="form-label">
+                    Repas à planifier
+                </span>
+
+                <div class="choice-grid">
+                    <label class="choice-card">
+                        <input
+                            id="plan-lunch"
+                            type="checkbox"
+                        >
+
+                        <span>
+                            <strong>
+                                Déjeuner
+                            </strong>
+
+                            <small>
+                                Générer également les repas du midi.
+                            </small>
+                        </span>
+                    </label>
+
+                    <label class="choice-card">
+                        <input
+                            id="plan-dinner"
+                            type="checkbox"
+                        >
+
+                        <span>
+                            <strong>
+                                Dîner
+                            </strong>
+
+                            <small>
+                                Générer les repas du soir.
+                            </small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <label class="choice-card">
+                    <input
+                        id="use-leftovers"
+                        type="checkbox"
+                    >
+
+                    <span>
+                        <strong>
+                            Utiliser les restes
+                        </strong>
+
+                        <small>
+                            Autoriser le planificateur à privilégier
+                            la réutilisation d'ingrédients et de préparations.
+                        </small>
+                    </span>
+                </label>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <h2>
+                    Temps de cuisine
+                </h2>
+
+                <p>
+                    Limites utilisées lors du choix des recettes.
+                </p>
+            </div>
+
+            <div class="form-grid">
+                <label class="form-field">
+                    <span>
+                        Maximum en semaine
+                    </span>
+
+                    <div class="input-with-unit">
+                        <input
+                            id="weekday-time"
+                            type="number"
+                            min="5"
+                            max="240"
+                            required
+                        >
+
+                        <span>
+                            min
+                        </span>
+                    </div>
+                </label>
+
+                <label class="form-field">
+                    <span>
+                        Maximum le week-end
+                    </span>
+
+                    <div class="input-with-unit">
+                        <input
+                            id="weekend-time"
+                            type="number"
+                            min="5"
+                            max="360"
+                            required
+                        >
+
+                        <span>
+                            min
+                        </span>
+                    </div>
+                </label>
+            </div>
+        </article>
+    </section>
+
+    <section class="preferences-layout">
+        <article class="panel">
+            <div class="panel-header">
+                <h2>
+                    Ce que vous aimez
+                </h2>
+
+                <p>
+                    Cuisines, ingrédients ou styles de plats à privilégier.
+                </p>
+            </div>
+
+            <div
+                id="liked-foods"
+                class="tag-list"
+            ></div>
+
+            <div class="tag-input-row">
+                <input
+                    id="liked-food-input"
+                    type="text"
+                    placeholder="Ex. cuisine italienne"
+                >
+
+                <button
+                    type="button"
+                    id="add-liked-food"
+                    class="button secondary"
+                >
+                    Ajouter
+                </button>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <h2>
+                    À éviter
+                </h2>
+
+                <p>
+                    Aliments que le planificateur ne doit pas proposer.
+                </p>
+            </div>
+
+            <div
+                id="avoided-foods"
+                class="tag-list"
+            ></div>
+
+            <div class="tag-input-row">
+                <input
+                    id="avoided-food-input"
+                    type="text"
+                    placeholder="Ex. endives"
+                >
+
+                <button
+                    type="button"
+                    id="add-avoided-food"
+                    class="button secondary"
+                >
+                    Ajouter
+                </button>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel settings-notes">
+        <div class="panel-header">
+            <h2>
+                Instructions supplémentaires
+            </h2>
+
+            <p>
+                Informations libres transmises au planificateur.
+            </p>
+        </div>
+
+        <label class="form-field">
+            <textarea
+                id="settings-notes"
+                rows="4"
+                placeholder="Ex. Privilégier les plats simples en semaine."
+            ></textarea>
+        </label>
+    </section>
+
+    <div class="settings-footer">
+        <span
+            id="settings-dirty"
+            class="unsaved-indicator"
+            hidden
+        >
+            Modifications non enregistrées
+        </span>
+
+        <button
+            type="submit"
+            id="save-settings"
+            class="button primary"
+        >
+            Enregistrer les paramètres
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/settings.js"></script>
 {% endblock %}
