@@ -81,6 +81,24 @@ async def generate_plan(
             """
         ).fetchall()
 
+        favorite_rows = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                servings,
+                preparation_minutes,
+                cooking_minutes,
+                notes,
+                cooked_count,
+                last_cooked_at
+            FROM recipes
+            WHERE is_favorite = 1
+            ORDER BY updated_at DESC
+            LIMIT 20
+            """
+        ).fetchall()
+
     if settings is None:
         raise web.HTTPConflict(
             text="Household settings are not configured"
@@ -105,6 +123,41 @@ async def generate_plan(
         start_date + timedelta(days=index)
         for index in range(planning_days)
     ]
+
+    favorite_recipes = []
+
+    for recipe in favorite_rows:
+        ingredients = connection.execute(
+            """
+            SELECT
+                name,
+                quantity,
+                unit
+            FROM recipe_ingredients
+            WHERE recipe_id = ?
+            ORDER BY id
+            """,
+            (recipe["id"],),
+        ).fetchall()
+
+        favorite_recipes.append(
+            {
+                "title": recipe["title"],
+                "servings": recipe["servings"],
+                "preparation_minutes":
+                    recipe["preparation_minutes"],
+                "cooking_minutes":
+                    recipe["cooking_minutes"],
+                "ingredients": [
+                    dict(row)
+                    for row in ingredients
+                ],
+                "cooked_count":
+                    recipe["cooked_count"],
+                "last_cooked_at":
+                    recipe["last_cooked_at"],
+            }
+        )
 
     context = {
         "planning": {
@@ -144,6 +197,7 @@ async def generate_plan(
             dict(row)
             for row in inventory
         ],
+        "favorite_recipes": favorite_recipes,
     }
 
     try:

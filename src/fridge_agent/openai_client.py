@@ -52,6 +52,11 @@ Rules:
 - Vary meals during the planning period.
 - Always provide the notes field for every meal.
 - Use an empty string when there is no specific note.
+- Favorite recipes are strong preference signals.
+- Reuse a favorite recipe when it fits the inventory and schedule.
+- You may also create recipes inspired by favorite recipes.
+- Do not overuse favorites or repeat the same recipe too frequently.
+- Keep variety across the planning period.
 """
 
 MEAL_PLAN_SCHEMA = {
