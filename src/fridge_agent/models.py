@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 FoodCategory = Literal[
@@ -69,3 +69,29 @@ class ConfirmScanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     items: list[ConfirmedFood]
+
+class HouseholdSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    people: int = Field(ge=1, le=20)
+    planning_days: int = Field(ge=1, le=14)
+
+    plan_lunch: bool
+    plan_dinner: bool
+
+    weekday_max_cooking_minutes: int = Field(
+        ge=5,
+        le=240,
+    )
+
+    weekend_max_cooking_minutes: int = Field(
+        ge=5,
+        le=360,
+    )
+
+    use_leftovers: bool
+
+    liked_foods: list[str]
+    avoided_foods: list[str]
+
+    notes: str = ""

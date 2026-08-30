@@ -82,6 +82,60 @@ def initialize_database(data_dir: Path) -> Path:
             """
         )
 
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS household_settings (
+                id INTEGER PRIMARY KEY CHECK(id = 1),
+                people INTEGER NOT NULL,
+                planning_days INTEGER NOT NULL,
+                plan_lunch INTEGER NOT NULL,
+                plan_dinner INTEGER NOT NULL,
+                weekday_max_cooking_minutes INTEGER NOT NULL,
+                weekend_max_cooking_minutes INTEGER NOT NULL,
+                use_leftovers INTEGER NOT NULL,
+                notes TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS food_preferences (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                preference_type TEXT NOT NULL
+                    CHECK(preference_type IN ('like', 'avoid')),
+                name TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO household_settings(
+                id,
+                people,
+                planning_days,
+                plan_lunch,
+                plan_dinner,
+                weekday_max_cooking_minutes,
+                weekend_max_cooking_minutes,
+                use_leftovers,
+                notes
+            )
+            VALUES (
+                1,
+                2,
+                7,
+                0,
+                1,
+                30,
+                60,
+                1,
+                ''
+            )
+            """
+        )
+
         connection.commit()
 
     return database_path

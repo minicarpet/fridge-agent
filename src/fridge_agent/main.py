@@ -8,6 +8,10 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from fridge_agent.database import initialize_database
 from fridge_agent.inventory import get_inventory
 from fridge_agent.scans import analyze_scan, confirm_scan, create_scan
+from fridge_agent.settings import (
+    get_settings,
+    update_settings,
+)
 
 
 async def index(request: web.Request) -> web.Response:
@@ -63,6 +67,16 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_get(
         "/api/inventory",
         get_inventory,
+    )
+
+    app.router.add_get(
+        "/api/settings",
+        get_settings,
+    )
+
+    app.router.add_put(
+        "/api/settings",
+        update_settings,
     )
 
     return app
