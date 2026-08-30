@@ -3,7 +3,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 FoodCategory = Literal[
     "vegetable",
     "fruit",
@@ -143,3 +142,16 @@ class GeneratedMealPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     meals: list[PlannedMeal]
+
+class PantryItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    quantity: float | None
+    unit: FoodUnit
+
+
+class PantryUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[PantryItem]

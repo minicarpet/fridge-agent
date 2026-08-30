@@ -16,6 +16,10 @@ from fridge_agent.meal_plans import generate_plan
 from fridge_agent.shopping import (
     get_shopping_list,
 )
+from fridge_agent.pantry import (
+    get_pantry,
+    update_pantry,
+)
 
 
 async def index(request: web.Request) -> web.Response:
@@ -91,6 +95,16 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_get(
         "/api/meal-plans/{meal_plan_id}/shopping-list",
         get_shopping_list,
+    )
+
+    app.router.add_get(
+        "/api/pantry",
+        get_pantry,
+    )
+
+    app.router.add_put(
+        "/api/pantry",
+        update_pantry,
     )
 
     return app

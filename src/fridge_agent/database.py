@@ -195,6 +195,18 @@ def initialize_database(data_dir: Path) -> Path:
             """
         )
 
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pantry_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                quantity REAL,
+                unit TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+
         connection.commit()
 
     return database_path

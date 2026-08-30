@@ -94,11 +94,22 @@ async def get_shopping_list(
             SELECT
                 name,
                 quantity,
-                unit
+                unit,
+                'fridge' AS source
             FROM inventory_items
-            ORDER BY id
+
+            UNION ALL
+
+            SELECT
+                name,
+                quantity,
+                unit,
+                'pantry' AS source
+            FROM pantry_items
+
+            ORDER BY name
             """
-        ).fetchall()
+          ).fetchall()
 
     required = {}
 
@@ -156,6 +167,7 @@ async def get_shopping_list(
                     {
                         "quantity": None,
                         "unit": inventory_item["unit"],
+                        "source": inventory_item["source"],
                     }
                 )
                 continue
@@ -174,6 +186,8 @@ async def get_shopping_list(
                             inventory_item["quantity"],
                         "unit":
                             inventory_item["unit"],
+                        "source": 
+                            inventory_item["source"],
                     }
                 )
                 continue
