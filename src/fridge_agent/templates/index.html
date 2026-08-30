@@ -1,0 +1,97 @@
+<!doctype html>
+
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Fridge Agent</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+        }
+
+        input {
+            display: block;
+            margin-top: 20px;
+        }
+
+        #result {
+            margin-top: 30px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Fridge Agent</h1>
+
+    <h2>Scanner le réfrigérateur</h2>
+
+    <p>
+        Sélectionnez plusieurs photos du réfrigérateur.
+    </p>
+
+    <form id="scan-form">
+        <input
+            type="file"
+            id="images"
+            name="images"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            required
+        >
+
+        <button type="submit">
+            Envoyer les photos
+        </button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById("scan-form");
+        const result = document.getElementById("result");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const input = document.getElementById("images");
+
+            const data = new FormData();
+
+            for (const file of input.files) {
+                data.append("images", file);
+            }
+
+            result.textContent = "Envoi en cours...";
+
+            const response = await fetch(
+                "/api/fridge/scans",
+                {
+                    method: "POST",
+                    body: data
+                }
+            );
+
+            const body = await response.json();
+
+            result.textContent =
+                JSON.stringify(body, null, 2);
+        });
+    </script>
+</body>
+</html>

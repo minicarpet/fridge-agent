@@ -25,3 +25,8 @@ package-dir = {"" = "src"}
 where = ["src"]
 include = ["fridge_agent*"]
 namespaces = false
+
+[tool.setuptools.package-data]
+fridge_agent = [
+    "templates/*.html",
+]
