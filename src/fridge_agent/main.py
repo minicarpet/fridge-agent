@@ -12,13 +12,18 @@ from fridge_agent.settings import (
     get_settings,
     update_settings,
 )
-from fridge_agent.meal_plans import generate_plan
+from fridge_agent.meal_plans import generate_plan, get_plan
 from fridge_agent.shopping import (
     get_shopping_list,
 )
 from fridge_agent.pantry import (
     get_pantry,
     update_pantry,
+)
+from fridge_agent.recipes import (
+    get_recipes,
+    save_meal_as_favorite,
+    set_recipe_favorite,
 )
 
 
@@ -98,6 +103,11 @@ def create_app(data_dir: Path) -> web.Application:
     )
 
     app.router.add_get(
+        "/api/meal-plans/{meal_plan_id}",
+        get_plan,
+    )
+
+    app.router.add_get(
         "/api/pantry",
         get_pantry,
     )
@@ -105,6 +115,21 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_put(
         "/api/pantry",
         update_pantry,
+    )
+
+    app.router.add_get(
+        "/api/recipes",
+        get_recipes,
+    )
+
+    app.router.add_post(
+        "/api/meals/{meal_id}/favorite",
+        save_meal_as_favorite,
+    )
+
+    app.router.add_put(
+        "/api/recipes/{recipe_id}/favorite",
+        set_recipe_favorite,
     )
 
     return app

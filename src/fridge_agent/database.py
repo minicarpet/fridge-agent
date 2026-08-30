@@ -207,6 +207,56 @@ def initialize_database(data_dir: Path) -> Path:
             """
         )
 
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recipes (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                servings INTEGER NOT NULL,
+                preparation_minutes INTEGER NOT NULL,
+                cooking_minutes INTEGER NOT NULL,
+                notes TEXT NOT NULL,
+                source TEXT NOT NULL
+                    CHECK(source IN ('meal_plan', 'manual')),
+                source_meal_id INTEGER UNIQUE,
+                is_favorite INTEGER NOT NULL DEFAULT 0,
+                cooked_count INTEGER NOT NULL DEFAULT 0,
+                last_cooked_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(source_meal_id)
+                    REFERENCES meal_plan_meals(id)
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recipe_ingredients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                recipe_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                quantity REAL NOT NULL,
+                unit TEXT NOT NULL,
+                FOREIGN KEY(recipe_id)
+                    REFERENCES recipes(id)
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recipe_steps (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                recipe_id TEXT NOT NULL,
+                step_index INTEGER NOT NULL,
+                instruction TEXT NOT NULL,
+                FOREIGN KEY(recipe_id)
+                    REFERENCES recipes(id)
+            )
+            """
+        )
+
         connection.commit()
 
     return database_path

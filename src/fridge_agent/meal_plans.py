@@ -355,3 +355,104 @@ def _validate_generated_plan(
         raise OpenAIError(
             "AI returned an incorrect serving count"
         )
+
+async def get_plan(
+    request: web.Request,
+) -> web.Response:
+    meal_plan_id = request.match_info[
+        "meal_plan_id"
+    ]
+
+    database_path: Path = request.app[
+        "database_path"
+    ]
+
+    with sqlite3.connect(database_path) as connection:
+        connection.row_factory = sqlite3.Row
+
+        plan = connection.execute(
+            """
+            SELECT
+                id,
+                created_at,
+                start_date,
+                planning_days,
+                status,
+                model
+            FROM meal_plans
+            WHERE id = ?
+            """,
+            (meal_plan_id,),
+        ).fetchone()
+
+        if plan is None:
+            raise web.HTTPNotFound(
+                text="Unknown meal plan"
+            )
+
+        meals = connection.execute(
+            """
+            SELECT
+                id,
+                meal_date,
+                meal_type,
+                title,
+                servings,
+                preparation_minutes,
+                cooking_minutes,
+                notes
+            FROM meal_plan_meals
+            WHERE meal_plan_id = ?
+            ORDER BY meal_date, meal_type
+            """,
+            (meal_plan_id,),
+        ).fetchall()
+
+        result = []
+
+        for meal in meals:
+            ingredients = connection.execute(
+                """
+                SELECT
+                    name,
+                    quantity,
+                    unit
+                FROM meal_plan_ingredients
+                WHERE meal_id = ?
+                ORDER BY id
+                """,
+                (meal["id"],),
+            ).fetchall()
+
+            steps = connection.execute(
+                """
+                SELECT
+                    step_index,
+                    instruction
+                FROM meal_plan_steps
+                WHERE meal_id = ?
+                ORDER BY step_index
+                """,
+                (meal["id"],),
+            ).fetchall()
+
+            value = dict(meal)
+
+            value["ingredients"] = [
+                dict(row)
+                for row in ingredients
+            ]
+
+            value["steps"] = [
+                row["instruction"]
+                for row in steps
+            ]
+
+            result.append(value)
+
+    return web.json_response(
+        {
+            **dict(plan),
+            "meals": result,
+        }
+    )
