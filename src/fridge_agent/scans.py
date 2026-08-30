@@ -5,9 +5,10 @@ import os
 
 from datetime import datetime, timezone
 from pathlib import Path
-
 from aiohttp import web
+from pydantic import ValidationError
 
+from fridge_agent.models import ConfirmScanRequest
 from fridge_agent.openai_client import OpenAIError, analyze_fridge
 
 LOGGER = logging.getLogger(__name__)
@@ -292,5 +293,136 @@ async def analyze_scan(request: web.Request) -> web.Response:
             "analysis": analysis.model_dump(),
             "model": metadata["model"],
             "usage": usage,
+        }
+    )
+
+async def confirm_scan(request: web.Request) -> web.Response:
+    scan_id = request.match_info["scan_id"]
+    database_path: Path = request.app["database_path"]
+
+    try:
+        body = await request.json()
+        confirmation = ConfirmScanRequest.model_validate(body)
+
+    except (ValueError, ValidationError) as exception:
+        raise web.HTTPBadRequest(
+            text="Invalid confirmation payload"
+        ) from exception
+
+    with sqlite3.connect(database_path) as connection:
+        scan = connection.execute(
+            """
+            SELECT status
+            FROM fridge_scans
+            WHERE id = ?
+            """,
+            (scan_id,),
+        ).fetchone()
+
+        if scan is None:
+            raise web.HTTPNotFound(
+                text="Unknown scan"
+            )
+
+        if scan[0] != "analyzed":
+            raise web.HTTPConflict(
+                text=f"Scan cannot be confirmed from status '{scan[0]}'"
+            )
+
+        updated_at = datetime.now(timezone.utc).isoformat()
+
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+
+            connection.execute(
+                """
+                DELETE FROM fridge_scan_confirmed_items
+                WHERE scan_id = ?
+                """,
+                (scan_id,),
+            )
+
+            connection.executemany(
+                """
+                INSERT INTO fridge_scan_confirmed_items(
+                    scan_id,
+                    name,
+                    category,
+                    quantity,
+                    unit,
+                    notes
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    (
+                        scan_id,
+                        item.name,
+                        item.category,
+                        item.quantity,
+                        item.unit,
+                        item.notes,
+                    )
+                    for item in confirmation.items
+                ],
+            )
+
+            # A confirmed full fridge scan becomes the new snapshot.
+            connection.execute(
+                """
+                DELETE FROM inventory_items
+                """
+            )
+
+            connection.executemany(
+                """
+                INSERT INTO inventory_items(
+                    name,
+                    category,
+                    quantity,
+                    unit,
+                    notes,
+                    source_scan_id,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    (
+                        item.name,
+                        item.category,
+                        item.quantity,
+                        item.unit,
+                        item.notes,
+                        scan_id,
+                        updated_at,
+                    )
+                    for item in confirmation.items
+                ],
+            )
+
+            connection.execute(
+                """
+                UPDATE fridge_scans
+                SET status = ?
+                WHERE id = ?
+                """,
+                (
+                    "confirmed",
+                    scan_id,
+                ),
+            )
+
+            connection.commit()
+
+        except Exception:
+            connection.rollback()
+            raise
+
+    return web.json_response(
+        {
+            "id": scan_id,
+            "status": "confirmed",
+            "inventory_count": len(confirmation.items),
         }
     )

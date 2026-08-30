@@ -54,3 +54,18 @@ class FridgeAnalysis(BaseModel):
 
     items: list[DetectedFood]
     warnings: list[str]
+
+class ConfirmedFood(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    category: FoodCategory
+    quantity: float | None
+    unit: FoodUnit
+    notes: str | None = None
+
+
+class ConfirmScanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ConfirmedFood]

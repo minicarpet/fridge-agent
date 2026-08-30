@@ -51,6 +51,37 @@ def initialize_database(data_dir: Path) -> Path:
             """
         )
 
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS fridge_scan_confirmed_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scan_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                quantity REAL,
+                unit TEXT NOT NULL,
+                notes TEXT,
+                FOREIGN KEY(scan_id) REFERENCES fridge_scans(id)
+            )
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS inventory_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                quantity REAL,
+                unit TEXT NOT NULL,
+                notes TEXT,
+                source_scan_id TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(source_scan_id) REFERENCES fridge_scans(id)
+            )
+            """
+        )
+
         connection.commit()
 
     return database_path

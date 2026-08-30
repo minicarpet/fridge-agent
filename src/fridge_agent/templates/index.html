@@ -14,17 +14,23 @@
     <style>
         body {
             font-family: sans-serif;
-            max-width: 700px;
+            max-width: 900px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
         button {
             margin-top: 20px;
+            margin-right: 10px;
             padding: 12px 20px;
         }
 
-        input {
+        input,
+        select {
+            padding: 8px;
+        }
+
+        #images {
             display: block;
             margin-top: 20px;
         }
@@ -32,6 +38,44 @@
         #result {
             margin-top: 30px;
             white-space: pre-wrap;
+        }
+
+        #warnings {
+            margin: 20px 0;
+        }
+
+        .warning {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+        }
+
+        .food-item {
+            display: grid;
+            grid-template-columns:
+                minmax(180px, 2fr)
+                minmax(110px, 1fr)
+                100px
+                120px
+                80px
+                auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .food-item button {
+            margin: 0;
+            padding: 8px 12px;
+        }
+
+        @media (max-width: 700px) {
+            .food-item {
+                grid-template-columns: 1fr;
+                padding: 15px 0;
+                border-bottom: 1px solid #ddd;
+            }
         }
     </style>
 </head>
@@ -55,43 +99,473 @@
             required
         >
 
-        <button type="submit">
-            Envoyer les photos
+        <button type="submit" id="scan-button">
+            Scanner le réfrigérateur
         </button>
     </form>
 
     <div id="result"></div>
 
+    <section id="analysis" hidden>
+        <h2>Produits détectés</h2>
+
+        <div id="warnings"></div>
+
+        <div id="items"></div>
+
+        <button type="button" id="add-item">
+            + Ajouter un produit
+        </button>
+
+        <button type="button" id="confirm">
+            Confirmer l'inventaire
+        </button>
+    </section>
+
     <script>
-        const form = document.getElementById("scan-form");
-        const result = document.getElementById("result");
+        const UNITS = [
+            "piece",
+            "g",
+            "kg",
+            "ml",
+            "l",
+            "pack",
+            "bottle",
+            "jar",
+            "can",
+            "unknown"
+        ];
 
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
+        const CATEGORIES = [
+            "vegetable",
+            "fruit",
+            "meat",
+            "fish",
+            "dairy",
+            "egg",
+            "drink",
+            "condiment",
+            "prepared_food",
+            "other"
+        ];
 
-            const input = document.getElementById("images");
+        let currentScanId = null;
+        let detectedItems = [];
 
-            const data = new FormData();
+        const form =
+            document.getElementById("scan-form");
 
-            for (const file of input.files) {
-                data.append("images", file);
+        const scanButton =
+            document.getElementById("scan-button");
+
+        const result =
+            document.getElementById("result");
+
+        const analysisSection =
+            document.getElementById("analysis");
+
+        const itemsContainer =
+            document.getElementById("items");
+
+        const warningsContainer =
+            document.getElementById("warnings");
+
+        const confirmButton =
+            document.getElementById("confirm");
+
+
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+
+            div.textContent = value ?? "";
+
+            return div.innerHTML;
+        }
+
+
+        function optionList(values, selected) {
+            return values
+                .map(value => `
+                    <option
+                        value="${value}"
+                        ${value === selected ? "selected" : ""}
+                    >
+                        ${value}
+                    </option>
+                `)
+                .join("");
+        }
+
+
+        function renderWarnings(warnings) {
+            warningsContainer.innerHTML = "";
+
+            if (!warnings || warnings.length === 0) {
+                return;
             }
 
-            result.textContent = "Envoi en cours...";
+            for (const warning of warnings) {
+                const element =
+                    document.createElement("div");
 
-            const response = await fetch(
-                "/api/fridge/scans",
-                {
-                    method: "POST",
-                    body: data
+                element.className = "warning";
+                element.textContent = warning;
+
+                warningsContainer.appendChild(element);
+            }
+        }
+
+
+        function renderItems() {
+            itemsContainer.innerHTML = "";
+
+            detectedItems.forEach((item, index) => {
+                const row =
+                    document.createElement("div");
+
+                row.className = "food-item";
+
+                row.innerHTML = `
+                    <input
+                        data-field="name"
+                        data-index="${index}"
+                        value="${escapeHtml(item.name)}"
+                        placeholder="Produit"
+                    >
+
+                    <select
+                        data-field="category"
+                        data-index="${index}"
+                    >
+                        ${optionList(
+                            CATEGORIES,
+                            item.category
+                        )}
+                    </select>
+
+                    <input
+                        data-field="quantity"
+                        data-index="${index}"
+                        type="number"
+                        min="0"
+                        step="any"
+                        value="${item.quantity ?? ""}"
+                        placeholder="Quantité"
+                    >
+
+                    <select
+                        data-field="unit"
+                        data-index="${index}"
+                    >
+                        ${optionList(
+                            UNITS,
+                            item.unit
+                        )}
+                    </select>
+
+                    <span>
+                        ${
+                            item.confidence === null ||
+                            item.confidence === undefined
+                                ? ""
+                                : `${Math.round(
+                                    item.confidence * 100
+                                )} %`
+                        }
+                    </span>
+
+                    <button
+                        type="button"
+                        data-delete="${index}"
+                    >
+                        Supprimer
+                    </button>
+                `;
+
+                itemsContainer.appendChild(row);
+            });
+
+            bindEditors();
+        }
+
+
+        function bindEditors() {
+            document
+                .querySelectorAll("[data-field]")
+                .forEach(element => {
+                    element.addEventListener(
+                        "change",
+                        () => {
+                            const index =
+                                Number(
+                                    element.dataset.index
+                                );
+
+                            const field =
+                                element.dataset.field;
+
+                            if (field === "quantity") {
+                                detectedItems[index][field] =
+                                    element.value === ""
+                                        ? null
+                                        : Number(
+                                            element.value
+                                        );
+                            } else {
+                                detectedItems[index][field] =
+                                    element.value;
+                            }
+                        }
+                    );
+                });
+
+            document
+                .querySelectorAll("[data-delete]")
+                .forEach(button => {
+                    button.addEventListener(
+                        "click",
+                        () => {
+                            const index =
+                                Number(
+                                    button.dataset.delete
+                                );
+
+                            detectedItems.splice(
+                                index,
+                                1
+                            );
+
+                            renderItems();
+                        }
+                    );
+                });
+        }
+
+
+        async function readError(response) {
+            try {
+                return await response.text();
+            } catch {
+                return `HTTP ${response.status}`;
+            }
+        }
+
+
+        form.addEventListener(
+            "submit",
+            async event => {
+                event.preventDefault();
+
+                const input =
+                    document.getElementById("images");
+
+                if (input.files.length === 0) {
+                    result.textContent =
+                        "Sélectionnez au moins une photo.";
+                    return;
+                }
+
+                const data = new FormData();
+
+                for (const file of input.files) {
+                    data.append("images", file);
+                }
+
+                analysisSection.hidden = true;
+                detectedItems = [];
+                currentScanId = null;
+
+                scanButton.disabled = true;
+
+                try {
+                    result.textContent =
+                        "Envoi des photos...";
+
+                    const uploadResponse = await fetch(
+                        "/api/fridge/scans",
+                        {
+                            method: "POST",
+                            body: data
+                        }
+                    );
+
+                    if (!uploadResponse.ok) {
+                        const error =
+                            await readError(
+                                uploadResponse
+                            );
+
+                        result.textContent =
+                            `Erreur pendant l'envoi : ${error}`;
+                        return;
+                    }
+
+                    const upload =
+                        await uploadResponse.json();
+
+                    currentScanId = upload.id;
+
+                    result.textContent =
+                        "Analyse du réfrigérateur par l'IA...";
+
+                    const analyzeResponse = await fetch(
+                        `/api/fridge/scans/` +
+                        `${currentScanId}/analyze`,
+                        {
+                            method: "POST"
+                        }
+                    );
+
+                    if (!analyzeResponse.ok) {
+                        const error =
+                            await readError(
+                                analyzeResponse
+                            );
+
+                        result.textContent =
+                            `Erreur pendant l'analyse IA : ` +
+                            error;
+
+                        return;
+                    }
+
+                    const analyzed =
+                        await analyzeResponse.json();
+
+                    detectedItems =
+                        analyzed.analysis.items;
+
+                    renderWarnings(
+                        analyzed.analysis.warnings
+                    );
+
+                    renderItems();
+
+                    analysisSection.hidden = false;
+
+                    result.textContent =
+                        `${detectedItems.length} ` +
+                        `produits détectés. ` +
+                        `Vérifiez-les avant confirmation.`;
+
+                } catch (error) {
+                    console.error(error);
+
+                    result.textContent =
+                        "Erreur de communication avec " +
+                        "Fridge Agent.";
+
+                } finally {
+                    scanButton.disabled = false;
+                }
+            }
+        );
+
+
+        document
+            .getElementById("add-item")
+            .addEventListener(
+                "click",
+                () => {
+                    detectedItems.push({
+                        name: "",
+                        category: "other",
+                        quantity: null,
+                        unit: "unknown",
+                        confidence: null,
+                        notes: null
+                    });
+
+                    renderItems();
                 }
             );
 
-            const body = await response.json();
 
-            result.textContent =
-                JSON.stringify(body, null, 2);
-        });
+        confirmButton.addEventListener(
+            "click",
+            async () => {
+                if (!currentScanId) {
+                    result.textContent =
+                        "Aucun scan à confirmer.";
+                    return;
+                }
+
+                const invalidItem =
+                    detectedItems.find(
+                        item =>
+                            !item.name ||
+                            item.name.trim() === ""
+                    );
+
+                if (invalidItem) {
+                    result.textContent =
+                        "Tous les produits doivent " +
+                        "avoir un nom.";
+                    return;
+                }
+
+                const items =
+                    detectedItems.map(item => ({
+                        name: item.name.trim(),
+                        category: item.category,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        notes: item.notes
+                    }));
+
+                confirmButton.disabled = true;
+
+                result.textContent =
+                    "Enregistrement de l'inventaire...";
+
+                try {
+                    const response = await fetch(
+                        `/api/fridge/scans/` +
+                        `${currentScanId}/confirm`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body: JSON.stringify({
+                                items: items
+                            })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const error =
+                            await readError(response);
+
+                        result.textContent =
+                            `Impossible d'enregistrer ` +
+                            `l'inventaire : ${error}`;
+
+                        return;
+                    }
+
+                    const body =
+                        await response.json();
+
+                    result.textContent =
+                        `Inventaire enregistré : ` +
+                        `${body.inventory_count} produits.`;
+
+                    analysisSection.hidden = true;
+
+                } catch (error) {
+                    console.error(error);
+
+                    result.textContent =
+                        "Erreur de communication pendant " +
+                        "l'enregistrement.";
+
+                } finally {
+                    confirmButton.disabled = false;
+                }
+            }
+        );
     </script>
 </body>
 </html>
