@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}
+Menu · Fridge Agent
+{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">
+            Planification
+        </p>
+
+        <h1>
+            Menu de la semaine
+        </h1>
+
+        <p class="page-description">
+            Générez vos repas à partir du frigo,
+            des placards et de vos préférences.
+        </p>
+    </div>
+</header>
+
+<div
+    id="menu-error"
+    class="alert error"
+    hidden
+></div>
+
+<div
+    id="menu-success"
+    class="alert success"
+    hidden
+></div>
+
+<section class="panel menu-generator">
+    <div class="menu-generator-content">
+        <div>
+            <h2>
+                Générer un nouveau menu
+            </h2>
+
+            <p class="page-description">
+                Le nombre de jours et les repas sont
+                définis dans vos paramètres.
+            </p>
+        </div>
+
+        <div class="menu-generator-actions">
+            <label class="form-field start-date-field">
+                <span>
+                    Premier jour
+                </span>
+
+                <input
+                    id="menu-start-date"
+                    type="date"
+                >
+            </label>
+
+            <button
+                type="button"
+                id="generate-menu"
+                class="button primary"
+            >
+                Générer le menu
+            </button>
+        </div>
+    </div>
+
+    <div
+        id="generation-status"
+        class="generation-status"
+        hidden
+    ></div>
+</section>
+
+<section
+    id="menu-empty"
+    class="panel"
+    hidden
+>
+    <div class="empty-state">
+        <strong>
+            Aucun menu disponible
+        </strong>
+
+        <span>
+            Générez votre premier menu pour commencer.
+        </span>
+    </div>
+</section>
+
+<section
+    id="current-menu"
+    hidden
+>
+    <div class="menu-section-header">
+        <div>
+            <h2>
+                Votre semaine
+            </h2>
+
+            <p
+                id="menu-period"
+                class="page-description"
+            ></p>
+        </div>
+
+        <a
+            id="shopping-link"
+            class="button secondary"
+            href="/shopping"
+        >
+            Voir la liste de courses
+        </a>
+    </div>
+
+    <div
+        id="meal-grid"
+        class="meal-grid"
+    ></div>
+</section>
+
+<dialog
+    id="recipe-dialog"
+    class="recipe-dialog"
+>
+    <div class="recipe-dialog-content">
+        <div class="recipe-dialog-header">
+            <div>
+                <p
+                    id="recipe-date"
+                    class="eyebrow"
+                ></p>
+
+                <h2 id="recipe-title"></h2>
+
+                <p
+                    id="recipe-meta"
+                    class="page-description"
+                ></p>
+            </div>
+
+            <button
+                type="button"
+                id="close-recipe"
+                class="icon-button"
+                title="Fermer"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="recipe-columns">
+            <section>
+                <h3>
+                    Ingrédients
+                </h3>
+
+                <div
+                    id="recipe-ingredients"
+                    class="recipe-ingredients"
+                ></div>
+            </section>
+
+            <section>
+                <h3>
+                    Préparation
+                </h3>
+
+                <ol
+                    id="recipe-steps"
+                    class="recipe-steps"
+                ></ol>
+            </section>
+        </div>
+
+        <div
+            id="recipe-notes"
+            class="recipe-notes"
+            hidden
+        ></div>
+
+        <div class="recipe-dialog-actions">
+            <button
+                type="button"
+                id="favorite-meal"
+                class="button secondary"
+            >
+                ♡ Ajouter aux favoris
+            </button>
+        </div>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/menu.js"></script>
+{% endblock %}

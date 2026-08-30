@@ -12,7 +12,11 @@ from fridge_agent.settings import (
     get_settings,
     update_settings,
 )
-from fridge_agent.meal_plans import generate_plan, get_plan
+from fridge_agent.meal_plans import (
+    generate_plan,
+    get_latest_plan,
+    get_plan,
+)
 from fridge_agent.shopping import (
     get_shopping_list,
 )
@@ -214,6 +218,11 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_post(
         "/api/meal-plans/generate",
         generate_plan,
+    )
+
+    app.router.add_get(
+        "/api/meal-plans/latest",
+        get_latest_plan,
     )
 
     app.router.add_get(

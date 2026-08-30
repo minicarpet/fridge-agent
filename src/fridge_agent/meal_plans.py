@@ -81,6 +81,17 @@ async def generate_plan(
             """
         ).fetchall()
 
+        pantry = connection.execute(
+            """
+            SELECT
+                name,
+                quantity,
+                unit
+            FROM pantry_items
+            ORDER BY name
+            """
+        ).fetchall()
+
         favorite_rows = connection.execute(
             """
             SELECT
@@ -98,6 +109,41 @@ async def generate_plan(
             LIMIT 20
             """
         ).fetchall()
+
+        favorite_recipes = []
+
+        for recipe in favorite_rows:
+            ingredients = connection.execute(
+                """
+                SELECT
+                    name,
+                    quantity,
+                    unit
+                FROM recipe_ingredients
+                WHERE recipe_id = ?
+                ORDER BY id
+                """,
+                (recipe["id"],),
+            ).fetchall()
+
+            favorite_recipes.append(
+                {
+                    "title": recipe["title"],
+                    "servings": recipe["servings"],
+                    "preparation_minutes":
+                        recipe["preparation_minutes"],
+                    "cooking_minutes":
+                        recipe["cooking_minutes"],
+                    "ingredients": [
+                        dict(row)
+                        for row in ingredients
+                    ],
+                    "cooked_count":
+                        recipe["cooked_count"],
+                    "last_cooked_at":
+                        recipe["last_cooked_at"],
+                }
+            )
 
     if settings is None:
         raise web.HTTPConflict(
@@ -123,42 +169,7 @@ async def generate_plan(
         start_date + timedelta(days=index)
         for index in range(planning_days)
     ]
-
-    favorite_recipes = []
-
-    for recipe in favorite_rows:
-        ingredients = connection.execute(
-            """
-            SELECT
-                name,
-                quantity,
-                unit
-            FROM recipe_ingredients
-            WHERE recipe_id = ?
-            ORDER BY id
-            """,
-            (recipe["id"],),
-        ).fetchall()
-
-        favorite_recipes.append(
-            {
-                "title": recipe["title"],
-                "servings": recipe["servings"],
-                "preparation_minutes":
-                    recipe["preparation_minutes"],
-                "cooking_minutes":
-                    recipe["cooking_minutes"],
-                "ingredients": [
-                    dict(row)
-                    for row in ingredients
-                ],
-                "cooked_count":
-                    recipe["cooked_count"],
-                "last_cooked_at":
-                    recipe["last_cooked_at"],
-            }
-        )
-
+    
     context = {
         "planning": {
             "start_date": start_date.isoformat(),
@@ -196,6 +207,10 @@ async def generate_plan(
         "inventory": [
             dict(row)
             for row in inventory
+        ],
+        "pantry": [
+            dict(row)
+            for row in pantry
         ],
         "favorite_recipes": favorite_recipes,
     }
@@ -447,17 +462,26 @@ async def get_plan(
         meals = connection.execute(
             """
             SELECT
-                id,
-                meal_date,
-                meal_type,
-                title,
-                servings,
-                preparation_minutes,
-                cooking_minutes,
-                notes
-            FROM meal_plan_meals
-            WHERE meal_plan_id = ?
-            ORDER BY meal_date, meal_type
+                meal.id,
+                meal.meal_date,
+                meal.meal_type,
+                meal.title,
+                meal.servings,
+                meal.preparation_minutes,
+                meal.cooking_minutes,
+                meal.notes,
+                CASE
+                    WHEN recipe.is_favorite = 1
+                    THEN 1
+                    ELSE 0
+                END AS is_favorite
+            FROM meal_plan_meals AS meal
+            LEFT JOIN recipes AS recipe
+                ON recipe.source_meal_id = meal.id
+            WHERE meal.meal_plan_id = ?
+            ORDER BY
+                meal.meal_date,
+                meal.meal_type
             """,
             (meal_plan_id,),
         ).fetchall()
@@ -492,6 +516,10 @@ async def get_plan(
 
             value = dict(meal)
 
+            value["is_favorite"] = bool(
+                value["is_favorite"]
+            )
+
             value["ingredients"] = [
                 dict(row)
                 for row in ingredients
@@ -508,5 +536,36 @@ async def get_plan(
         {
             **dict(plan),
             "meals": result,
+        }
+    )
+
+async def get_latest_plan(
+    request: web.Request,
+) -> web.Response:
+    database_path: Path = request.app[
+        "database_path"
+    ]
+
+    with sqlite3.connect(
+        database_path
+    ) as connection:
+        row = connection.execute(
+            """
+            SELECT id
+            FROM meal_plans
+            WHERE status = 'generated'
+            ORDER BY created_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
+    if row is None:
+        raise web.HTTPNotFound(
+            text="No meal plan available"
+        )
+
+    return web.json_response(
+        {
+            "id": row[0],
         }
     )
