@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard · Fridge Agent
+{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">
+            Fridge Agent
+        </p>
+
+        <h1>
+            Dashboard
+        </h1>
+
+        <p class="page-description">
+            État de votre cuisine et préparation des prochains repas.
+        </p>
+    </div>
+
+    <a
+        class="button primary"
+        href="/fridge"
+    >
+        Scanner le frigo
+    </a>
+</header>
+
+<div
+    id="dashboard-error"
+    class="alert error"
+    hidden
+></div>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span class="stat-label">
+            Frigo
+        </span>
+
+        <strong
+            class="stat-value"
+            id="fridge-count"
+        >
+            —
+        </strong>
+
+        <span class="stat-detail">
+            produits connus
+        </span>
+
+        <a href="/fridge">
+            Voir l'inventaire
+        </a>
+    </article>
+
+    <article class="stat-card">
+        <span class="stat-label">
+            Placards
+        </span>
+
+        <strong
+            class="stat-value"
+            id="pantry-count"
+        >
+            —
+        </strong>
+
+        <span class="stat-detail">
+            produits suivis
+        </span>
+
+        <a href="/pantry">
+            Gérer les placards
+        </a>
+    </article>
+
+    <article class="stat-card">
+        <span class="stat-label">
+            Recettes favorites
+        </span>
+
+        <strong
+            class="stat-value"
+            id="favorite-count"
+        >
+            —
+        </strong>
+
+        <span class="stat-detail">
+            recettes enregistrées
+        </span>
+
+        <a href="/recipes">
+            Voir les recettes
+        </a>
+    </article>
+
+    <article class="stat-card">
+        <span class="stat-label">
+            Planification
+        </span>
+
+        <strong
+            class="stat-value"
+            id="planning-days"
+        >
+            —
+        </strong>
+
+        <span class="stat-detail">
+            jours planifiés
+        </span>
+
+        <a href="/settings">
+            Modifier
+        </a>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>
+                    Prochaine action
+                </h2>
+
+                <p>
+                    Maintenez l'inventaire à jour avant
+                    de générer votre semaine.
+                </p>
+            </div>
+        </div>
+
+        <div class="action-list">
+            <a
+                class="action-card"
+                href="/fridge"
+            >
+                <strong>
+                    Scanner le réfrigérateur
+                </strong>
+
+                <span>
+                    Analyse des photos et validation
+                    de l'inventaire.
+                </span>
+            </a>
+
+            <a
+                class="action-card"
+                href="/pantry"
+            >
+                <strong>
+                    Vérifier les placards
+                </strong>
+
+                <span>
+                    Riz, pâtes, huile, épices et
+                    produits secs.
+                </span>
+            </a>
+
+            <a
+                class="action-card"
+                href="/menu"
+            >
+                <strong>
+                    Préparer la semaine
+                </strong>
+
+                <span>
+                    Générer le menu et les recettes.
+                </span>
+            </a>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>
+                    Configuration actuelle
+                </h2>
+
+                <p>
+                    Paramètres utilisés par l'IA.
+                </p>
+            </div>
+        </div>
+
+        <dl class="settings-summary">
+            <div>
+                <dt>Personnes</dt>
+                <dd id="people">—</dd>
+            </div>
+
+            <div>
+                <dt>Déjeuners</dt>
+                <dd id="plan-lunch">—</dd>
+            </div>
+
+            <div>
+                <dt>Dîners</dt>
+                <dd id="plan-dinner">—</dd>
+            </div>
+
+            <div>
+                <dt>Temps semaine</dt>
+                <dd id="weekday-time">—</dd>
+            </div>
+        </dl>
+    </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

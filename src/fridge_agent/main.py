@@ -27,14 +27,92 @@ from fridge_agent.recipes import (
 )
 
 
-async def index(request: web.Request) -> web.Response:
+def render_template(
+    request: web.Request,
+    template_name: str,
+    *,
+    active_page: str,
+) -> web.Response:
     templates: Environment = request.app["templates"]
 
-    template = templates.get_template("index.html")
+    template = templates.get_template(
+        template_name
+    )
 
     return web.Response(
-        text=template.render(),
+        text=template.render(
+            active_page=active_page,
+        ),
         content_type="text/html",
+    )
+
+async def dashboard(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "dashboard.html",
+        active_page="dashboard",
+    )
+
+
+async def fridge_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "fridge.html",
+        active_page="fridge",
+    )
+
+
+async def pantry_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "pantry.html",
+        active_page="pantry",
+    )
+
+
+async def menu_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "menu.html",
+        active_page="menu",
+    )
+
+
+async def recipes_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "recipes.html",
+        active_page="recipes",
+    )
+
+
+async def shopping_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "shopping.html",
+        active_page="shopping",
+    )
+
+
+async def settings_page(
+    request: web.Request,
+) -> web.Response:
+    return render_template(
+        request,
+        "settings.html",
+        active_page="settings",
     )
 
 
@@ -47,8 +125,19 @@ async def health(_: web.Request) -> web.Response:
 
 
 def create_app(data_dir: Path) -> web.Application:
+    static_dir = (
+        Path(__file__).parent
+        / "static"
+    )
+
     app = web.Application(
         client_max_size=50 * 1024 * 1024,
+    )
+
+    app.router.add_static(
+        "/static/",
+        path=static_dir,
+        name="static",
     )
 
     app["data_dir"] = data_dir
@@ -59,7 +148,37 @@ def create_app(data_dir: Path) -> web.Application:
         autoescape=select_autoescape(),
     )
 
-    app.router.add_get("/", index)
+    app.router.add_get("/", dashboard)
+
+    app.router.add_get(
+        "/fridge",
+        fridge_page,
+    )
+
+    app.router.add_get(
+        "/pantry",
+        pantry_page,
+    )
+
+    app.router.add_get(
+        "/menu",
+        menu_page,
+    )
+
+    app.router.add_get(
+        "/recipes",
+        recipes_page,
+    )
+
+    app.router.add_get(
+        "/shopping",
+        shopping_page,
+    )
+
+    app.router.add_get(
+        "/settings",
+        settings_page,
+    )
     app.router.add_get("/health", health)
 
     app.router.add_post(

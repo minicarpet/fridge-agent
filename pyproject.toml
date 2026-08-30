@@ -29,4 +29,6 @@ namespaces = false
 [tool.setuptools.package-data]
 fridge_agent = [
     "templates/*.html",
+    "static/css/*.css",
+    "static/js/*.js",
 ]

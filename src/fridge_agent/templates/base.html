@@ -1,0 +1,91 @@
+<!doctype html>
+
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% block title %}Fridge Agent{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/app.css"
+    >
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a
+                href="/"
+                class="brand"
+            >
+                Fridge Agent
+            </a>
+
+            <nav class="navigation">
+                <a
+                    href="/"
+                    class="{% if active_page == 'dashboard' %}active{% endif %}"
+                >
+                    Dashboard
+                </a>
+
+                <a
+                    href="/fridge"
+                    class="{% if active_page == 'fridge' %}active{% endif %}"
+                >
+                    Frigo
+                </a>
+
+                <a
+                    href="/pantry"
+                    class="{% if active_page == 'pantry' %}active{% endif %}"
+                >
+                    Placards
+                </a>
+
+                <a
+                    href="/menu"
+                    class="{% if active_page == 'menu' %}active{% endif %}"
+                >
+                    Menu
+                </a>
+
+                <a
+                    href="/recipes"
+                    class="{% if active_page == 'recipes' %}active{% endif %}"
+                >
+                    Recettes
+                </a>
+
+                <a
+                    href="/shopping"
+                    class="{% if active_page == 'shopping' %}active{% endif %}"
+                >
+                    Courses
+                </a>
+
+                <a
+                    href="/settings"
+                    class="{% if active_page == 'settings' %}active{% endif %}"
+                >
+                    Paramètres
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
