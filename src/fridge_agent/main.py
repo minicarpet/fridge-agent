@@ -6,7 +6,7 @@ from aiohttp import web
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from fridge_agent.database import initialize_database
-from fridge_agent.scans import create_scan
+from fridge_agent.scans import analyze_scan, create_scan
 
 
 async def index(request: web.Request) -> web.Response:
@@ -49,6 +49,11 @@ def create_app(data_dir: Path) -> web.Application:
         create_scan,
     )
 
+    app.router.add_post(
+        "/api/fridge/scans/{scan_id}/analyze",
+        analyze_scan,
+    )
+
     return app
 
 
@@ -68,7 +73,7 @@ def main() -> None:
     data_dir = Path(
         os.getenv(
             "FRIDGE_AGENT_DATA_DIR",
-            "/var/lib/fridge-agent",
+            "/data/fridge-agent",
         )
     )
 
