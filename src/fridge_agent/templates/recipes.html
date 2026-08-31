@@ -8,7 +8,7 @@ Recettes · Fridge Agent
 <header class="page-header">
     <div>
         <p class="eyebrow">
-            Inventaire
+            Bibliothèque
         </p>
 
         <h1>
@@ -16,12 +16,185 @@ Recettes · Fridge Agent
         </h1>
 
         <p class="page-description">
-            Découvrez des recettes basées sur les ingrédients disponibles dans votre inventaire.
+            Retrouvez les recettes enregistrées depuis
+            vos menus et gérez vos favorites.
         </p>
     </div>
 </header>
 
-<div class="placeholder">
-    Cette vue sera activée à la prochaine étape.
-</div>
+<div
+    id="recipes-error"
+    class="alert error"
+    hidden
+></div>
+
+<div
+    id="recipes-success"
+    class="alert success"
+    hidden
+></div>
+
+<section class="panel recipes-toolbar">
+    <div class="recipes-toolbar-content">
+        <label class="recipe-search">
+            <span>
+                Rechercher
+            </span>
+
+            <input
+                id="recipe-search"
+                type="search"
+                placeholder="Nom ou ingrédient..."
+            >
+        </label>
+
+        <label class="favorite-filter">
+            <input
+                id="favorite-only"
+                type="checkbox"
+            >
+
+            <span>
+                Favorites uniquement
+            </span>
+        </label>
+    </div>
+</section>
+
+<section
+    id="recipes-empty"
+    class="panel"
+    hidden
+>
+    <div class="empty-state">
+        <strong>
+            Aucune recette enregistrée
+        </strong>
+
+        <span>
+            Ajoutez une recette aux favoris depuis
+            le menu pour l'enregistrer ici.
+        </span>
+
+        <a
+            href="/menu"
+            class="button primary"
+        >
+            Voir le menu
+        </a>
+    </div>
+</section>
+
+<section
+    id="recipes-no-result"
+    class="panel"
+    hidden
+>
+    <div class="empty-state">
+        <strong>
+            Aucune recette correspondante
+        </strong>
+
+        <span>
+            Modifiez votre recherche ou désactivez
+            le filtre des favorites.
+        </span>
+    </div>
+</section>
+
+<section
+    id="recipes-content"
+    hidden
+>
+    <div class="recipes-section-header">
+        <div>
+            <h2>
+                Bibliothèque
+            </h2>
+
+            <p
+                id="recipes-summary"
+                class="page-description"
+            ></p>
+        </div>
+    </div>
+
+    <div
+        id="recipes-grid"
+        class="recipes-grid"
+    ></div>
+</section>
+
+<dialog
+    id="saved-recipe-dialog"
+    class="recipe-dialog"
+>
+    <div class="recipe-dialog-content">
+        <div class="recipe-dialog-header">
+            <div>
+                <p class="eyebrow">
+                    Recette enregistrée
+                </p>
+
+                <h2 id="saved-recipe-title"></h2>
+
+                <p
+                    id="saved-recipe-meta"
+                    class="page-description"
+                ></p>
+            </div>
+
+            <button
+                type="button"
+                id="close-saved-recipe"
+                class="icon-button"
+                title="Fermer"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="recipe-columns">
+            <section>
+                <h3>
+                    Ingrédients
+                </h3>
+
+                <div
+                    id="saved-recipe-ingredients"
+                    class="recipe-ingredients"
+                ></div>
+            </section>
+
+            <section>
+                <h3>
+                    Préparation
+                </h3>
+
+                <ol
+                    id="saved-recipe-steps"
+                    class="recipe-steps"
+                ></ol>
+            </section>
+        </div>
+
+        <div
+            id="saved-recipe-notes"
+            class="recipe-notes"
+            hidden
+        ></div>
+
+        <div class="recipe-dialog-actions">
+            <button
+                type="button"
+                id="toggle-saved-recipe-favorite"
+                class="button secondary"
+            ></button>
+        </div>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/recipes.js"></script>
 {% endblock %}
