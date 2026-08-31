@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}
-Liste de courses · Fridge Agent
+Courses · Fridge Agent
 {% endblock %}
 
 {% block content %}
 <header class="page-header">
     <div>
         <p class="eyebrow">
-            Inventaire
+            Planification
         </p>
 
         <h1>
@@ -16,12 +16,161 @@ Liste de courses · Fridge Agent
         </h1>
 
         <p class="page-description">
-            Gérez votre liste de courses et ajoutez des articles à acheter.
+            Produits manquants calculés à partir du menu,
+            du réfrigérateur et des placards.
         </p>
     </div>
 </header>
 
-<div class="placeholder">
-    Cette vue sera activée à la prochaine étape.
-</div>
+<div
+    id="shopping-error"
+    class="alert error"
+    hidden
+></div>
+
+<section
+    id="shopping-loading"
+    class="panel"
+>
+    Chargement de la liste de courses...
+</section>
+
+<section
+    id="shopping-empty"
+    class="panel"
+    hidden
+>
+    <div class="empty-state">
+        <strong>
+            Aucun menu disponible
+        </strong>
+
+        <span>
+            Générez un menu pour obtenir
+            votre liste de courses.
+        </span>
+
+        <a
+            href="/menu"
+            class="button primary"
+        >
+            Générer un menu
+        </a>
+    </div>
+</section>
+
+<section
+    id="shopping-content"
+    hidden
+>
+    <div class="shopping-summary-grid">
+        <article class="stat-card">
+            <span>
+                À acheter
+            </span>
+
+            <strong id="shopping-buy-count">
+                —
+            </strong>
+        </article>
+
+        <article class="stat-card">
+            <span>
+                À vérifier
+            </span>
+
+            <strong id="shopping-check-count">
+                —
+            </strong>
+        </article>
+
+        <article class="stat-card">
+            <span>
+                Déjà disponibles
+            </span>
+
+            <strong id="shopping-covered-count">
+                —
+            </strong>
+        </article>
+    </div>
+
+    <div class="shopping-actions">
+        <div>
+            <h2>
+                Courses
+            </h2>
+
+            <p
+                id="shopping-progress"
+                class="page-description"
+            ></p>
+        </div>
+
+        <button
+            type="button"
+            id="reset-shopping"
+            class="button secondary"
+        >
+            Réinitialiser les coches
+        </button>
+    </div>
+
+    <section
+        id="buy-section"
+        class="panel shopping-section"
+        hidden
+    >
+        <div class="panel-header">
+            <h2>
+                À acheter
+            </h2>
+
+            <p>
+                Quantités manquantes connues.
+            </p>
+        </div>
+
+        <div id="buy-items"></div>
+    </section>
+
+    <section
+        id="check-section"
+        class="panel shopping-section"
+        hidden
+    >
+        <div class="panel-header">
+            <h2>
+                À vérifier
+            </h2>
+
+            <p>
+                Ces produits sont présents, mais leur
+                quantité ou leur unité ne permet pas
+                un calcul fiable.
+            </p>
+        </div>
+
+        <div id="check-items"></div>
+    </section>
+
+    <details class="panel covered-section">
+        <summary>
+            <span>
+                Déjà disponibles
+            </span>
+
+            <strong id="covered-summary-count"></strong>
+        </summary>
+
+        <div
+            id="covered-items"
+            class="covered-items"
+        ></div>
+    </details>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/shopping.js"></script>
 {% endblock %}
