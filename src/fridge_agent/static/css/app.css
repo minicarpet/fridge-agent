@@ -1685,6 +1685,27 @@ a {
     margin-bottom: 28px;
 }
 
+.shopping-summary-grid .stat-card {
+    min-height: auto;
+
+    padding: 20px;
+}
+
+
+.shopping-summary-grid .stat-card span {
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+.shopping-summary-grid .stat-card strong {
+    margin-top: 8px;
+
+    font-size: 32px;
+    line-height: 1;
+}
+
 
 .shopping-actions {
     display: flex;

@@ -1,4 +1,5 @@
 import os
+import hashlib
 
 from pathlib import Path
 
@@ -30,6 +31,28 @@ from fridge_agent.recipes import (
     set_recipe_favorite,
 )
 
+def _get_asset_version(
+    static_dir: Path,
+) -> str:
+    digest = hashlib.sha256()
+
+    for path in sorted(
+        item
+        for item in static_dir.rglob("*")
+        if item.is_file()
+    ):
+        digest.update(
+            path.relative_to(
+                static_dir
+            ).as_posix().encode()
+        )
+
+        digest.update(
+            path.read_bytes()
+        )
+
+    return digest.hexdigest()[:12]
+
 
 def render_template(
     request: web.Request,
@@ -46,6 +69,9 @@ def render_template(
     return web.Response(
         text=template.render(
             active_page=active_page,
+            asset_version=request.app[
+                "asset_version"
+            ],
         ),
         content_type="text/html",
     )
@@ -134,6 +160,12 @@ def create_app(data_dir: Path) -> web.Application:
         / "static"
     )
 
+    app_asset_version = (
+        _get_asset_version(
+            static_dir
+        )
+    )
+
     app = web.Application(
         client_max_size=50 * 1024 * 1024,
     )
@@ -145,6 +177,9 @@ def create_app(data_dir: Path) -> web.Application:
     )
 
     app["data_dir"] = data_dir
+    app["asset_version"] = (
+        app_asset_version
+    )
     app["database_path"] = initialize_database(data_dir)
 
     app["templates"] = Environment(
