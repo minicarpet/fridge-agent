@@ -7,8 +7,38 @@ from pathlib import Path
 from aiohttp import web
 
 
-def _normalize_name(name: str) -> str:
-    return " ".join(
+_INVARIANT_WORDS = {
+    "ananas",
+    "couscous",
+    "houmous",
+    "jus",
+    "mais",
+    "maïs",
+    "noix",
+    "pois",
+    "riz",
+}
+
+
+def _normalize_word(
+    word: str,
+) -> str:
+    if word in _INVARIANT_WORDS:
+        return word
+
+    if len(word) <= 3:
+        return word
+
+    if word.endswith(("s", "x")):
+        return word[:-1]
+
+    return word
+
+
+def _normalize_name(
+    name: str,
+) -> str:
+    normalized = (
         unicodedata.normalize(
             "NFKC",
             name,
@@ -17,6 +47,10 @@ def _normalize_name(name: str) -> str:
         .split()
     )
 
+    return " ".join(
+        _normalize_word(word)
+        for word in normalized
+    )
 
 def _canonical_quantity(
     quantity: float,
