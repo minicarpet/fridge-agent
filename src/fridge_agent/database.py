@@ -1,6 +1,37 @@
 import sqlite3
 from pathlib import Path
 
+def _apply_migrations(
+    connection: sqlite3.Connection,
+) -> None:
+    version = connection.execute(
+        "PRAGMA user_version"
+    ).fetchone()[0]
+
+    if version < 1:
+        columns = {
+            row[1]
+            for row in connection.execute(
+                """
+                PRAGMA table_info(
+                    meal_plan_meals
+                )
+                """
+            )
+        }
+
+        if "cooked_at" not in columns:
+            connection.execute(
+                """
+                ALTER TABLE meal_plan_meals
+                ADD COLUMN cooked_at TEXT
+                """
+            )
+
+        connection.execute(
+            "PRAGMA user_version = 1"
+        )
+
 def initialize_database(data_dir: Path) -> Path:
     data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -255,6 +286,10 @@ def initialize_database(data_dir: Path) -> Path:
                     REFERENCES recipes(id)
             )
             """
+        )
+
+        _apply_migrations(
+            connection
         )
 
         connection.commit()

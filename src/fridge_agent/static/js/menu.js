@@ -32,6 +32,16 @@ const dialog =
 const favoriteButton =
     document.getElementById("favorite-meal");
 
+const cookedButton =
+    document.getElementById(
+        "mark-meal-cooked"
+    );
+
+const warningElement =
+    document.getElementById(
+        "menu-warning"
+    );
+
 
 async function fetchJson(
     url,
@@ -65,6 +75,7 @@ async function fetchJson(
 function hideMessages() {
     errorElement.hidden = true;
     successElement.hidden = true;
+    warningElement.hidden = true;
 }
 
 
@@ -214,6 +225,14 @@ function renderPlan(plan) {
                                </span>`
                             : ""
                     }
+
+                    ${
+                        meal.cooked_at
+                            ? `<span class="cooked-label">
+                                ✓ Cuisiné
+                            </span>`
+                            : ""
+                    }
                 </div>
             </div>
 
@@ -356,10 +375,10 @@ function openRecipe(meal) {
     }
 
     updateFavoriteButton();
+    updateCookedButton();
 
     dialog.showModal();
 }
-
 
 function updateFavoriteButton() {
     if (!selectedMeal) {
@@ -377,6 +396,26 @@ function updateFavoriteButton() {
             "♡ Ajouter aux favoris";
 
         favoriteButton.disabled =
+            false;
+    }
+}
+
+function updateCookedButton() {
+    if (!selectedMeal) {
+        return;
+    }
+
+    if (selectedMeal.cooked_at) {
+        cookedButton.textContent =
+            "✓ Repas cuisiné";
+
+        cookedButton.disabled =
+            true;
+    } else {
+        cookedButton.textContent =
+            "✓ Marquer comme cuisiné";
+
+        cookedButton.disabled =
             false;
     }
 }
@@ -562,6 +601,83 @@ favoriteButton.addEventListener(
                 false;
 
             favoriteButton.disabled =
+                false;
+        }
+    }
+);
+
+cookedButton.addEventListener(
+    "click",
+    async () => {
+        if (!selectedMeal) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Confirmer que ce repas a été cuisiné ? " +
+                "Les quantités connues du frigo et des " +
+                "placards seront décrémentées."
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        hideMessages();
+
+        cookedButton.disabled =
+            true;
+
+        try {
+            const result =
+                await fetchJson(
+                    `/api/meals/` +
+                    `${selectedMeal.id}/cooked`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            selectedMeal.cooked_at =
+                result.cooked_at;
+
+            updateCookedButton();
+
+            renderPlan(
+                currentPlan
+            );
+
+            successElement.textContent =
+                "Repas marqué comme cuisiné. " +
+                "Inventaire mis à jour.";
+
+            successElement.hidden =
+                false;
+
+            if (
+                result.unresolved.length > 0
+            ) {
+                warningElement.textContent =
+                    `${result.unresolved.length} ` +
+                    "ingrédient(s) n'ont pas pu être " +
+                    "décrémentés automatiquement.";
+
+                warningElement.hidden =
+                    false;
+            }
+
+        } catch (error) {
+            console.error(error);
+
+            errorElement.textContent =
+                `Impossible de marquer le repas ` +
+                `comme cuisiné : ${error.message}`;
+
+            errorElement.hidden =
+                false;
+
+            cookedButton.disabled =
                 false;
         }
     }

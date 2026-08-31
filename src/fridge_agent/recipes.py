@@ -27,7 +27,8 @@ async def save_meal_as_favorite(
                 servings,
                 preparation_minutes,
                 cooking_minutes,
-                notes
+                notes,
+                cooked_at
             FROM meal_plan_meals
             WHERE id = ?
             """,
@@ -118,6 +119,8 @@ async def save_meal_as_favorite(
                     source,
                     source_meal_id,
                     is_favorite,
+                    cooked_count,
+                    last_cooked_at,
                     created_at,
                     updated_at
                 )
@@ -133,6 +136,12 @@ async def save_meal_as_favorite(
                     "meal_plan",
                     meal["id"],
                     1,
+                    (
+                        1
+                        if meal["cooked_at"] is not None
+                        else 0
+                    ),
+                    meal["cooked_at"],
                     now,
                     now,
                 ),

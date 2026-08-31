@@ -470,6 +470,7 @@ async def get_plan(
                 meal.preparation_minutes,
                 meal.cooking_minutes,
                 meal.notes,
+                meal.cooked_at,
                 CASE
                     WHEN recipe.is_favorite = 1
                     THEN 1

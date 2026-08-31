@@ -30,6 +30,9 @@ from fridge_agent.recipes import (
     save_meal_as_favorite,
     set_recipe_favorite,
 )
+from fridge_agent.cooking import (
+    mark_meal_cooked,
+)
 
 def _get_asset_version(
     static_dir: Path,
@@ -288,6 +291,11 @@ def create_app(data_dir: Path) -> web.Application:
     app.router.add_post(
         "/api/meals/{meal_id}/favorite",
         save_meal_as_favorite,
+    )
+
+    app.router.add_post(
+        "/api/meals/{meal_id}/cooked",
+        mark_meal_cooked,
     )
 
     app.router.add_put(

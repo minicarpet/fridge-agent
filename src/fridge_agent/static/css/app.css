@@ -1861,6 +1861,24 @@ a {
     font-size: 13px;
 }
 
+.cooked-label {
+    color: var(--primary);
+
+    font-weight: 700;
+}
+
+
+.recipe-dialog-actions {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
 @media (max-width: 1050px) {
     .stats-grid {
         grid-template-columns:
@@ -2164,5 +2182,13 @@ a {
     .shopping-item {
         padding:
             16px 2px;
+    }
+
+    .recipe-dialog-actions {
+        flex-direction: column;
+    }
+
+    .recipe-dialog-actions .button {
+        width: 100%;
     }
 }

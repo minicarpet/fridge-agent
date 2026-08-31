@@ -1,10 +1,14 @@
 import sqlite3
-import unicodedata
 
 from collections import defaultdict
 from pathlib import Path
 
 from aiohttp import web
+
+from fridge_agent.food_quantities import (
+    canonical_quantity,
+    normalize_food_name,
+)
 
 
 _INVARIANT_WORDS = {
@@ -33,37 +37,6 @@ def _normalize_word(
         return word[:-1]
 
     return word
-
-
-def _normalize_name(
-    name: str,
-) -> str:
-    normalized = (
-        unicodedata.normalize(
-            "NFKC",
-            name,
-        )
-        .casefold()
-        .split()
-    )
-
-    return " ".join(
-        _normalize_word(word)
-        for word in normalized
-    )
-
-def _canonical_quantity(
-    quantity: float,
-    unit: str,
-) -> tuple[float, str]:
-    if unit == "kg":
-        return quantity * 1000.0, "g"
-
-    if unit == "l":
-        return quantity * 1000.0, "ml"
-
-    return quantity, unit
-
 
 def _display_quantity(
     quantity: float,
@@ -148,12 +121,12 @@ async def get_shopping_list(
     required = {}
 
     for row in ingredient_rows:
-        quantity, unit = _canonical_quantity(
+        quantity, unit = canonical_quantity(
             row["quantity"],
             row["unit"],
         )
 
-        normalized_name = _normalize_name(
+        normalized_name = normalize_food_name(
             row["name"]
         )
 
@@ -175,7 +148,9 @@ async def get_shopping_list(
 
     for row in inventory_rows:
         inventory_by_name[
-            _normalize_name(row["name"])
+            normalize_food_name(
+                row["name"]
+            )
         ].append(row)
 
     shopping_items = []
@@ -207,7 +182,7 @@ async def get_shopping_list(
                 continue
 
             available_quantity, available_unit = (
-                _canonical_quantity(
+                canonical_quantity(
                     inventory_item["quantity"],
                     inventory_item["unit"],
                 )
