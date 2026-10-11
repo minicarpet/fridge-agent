@@ -29,42 +29,6 @@ Frigo · Fridge Agent
 ></div>
 
 <section class="fridge-layout">
-    <article class="panel inventory-panel">
-        <div class="panel-header panel-header-row">
-            <div>
-                <h2>
-                    Inventaire actuel
-                </h2>
-
-                <p id="inventory-summary">
-                    Chargement...
-                </p>
-            </div>
-
-            <strong
-                class="inventory-count"
-                id="inventory-count"
-            >
-                —
-            </strong>
-        </div>
-
-        <div id="inventory-empty" hidden>
-            <div class="empty-state">
-                <strong>
-                    Aucun produit connu
-                </strong>
-
-                <span>
-                    Effectuez un premier scan du
-                    réfrigérateur.
-                </span>
-            </div>
-        </div>
-
-        <div id="inventory-groups"></div>
-    </article>
-
     <article class="panel scanner-panel">
         <div class="panel-header">
             <h2>
@@ -120,61 +84,97 @@ Frigo · Fridge Agent
             hidden
         ></div>
     </article>
-</section>
 
-<section
-    id="analysis"
-    class="panel review-panel"
-    hidden
->
-    <div class="panel-header panel-header-row">
-        <div>
-            <h2>
-                Vérification
-            </h2>
+    <section
+        id="analysis"
+        class="panel review-panel"
+        hidden
+    >
+        <div class="panel-header panel-header-row">
+            <div>
+                <h2>
+                    Vérification
+                </h2>
 
-            <p>
-                Corrigez les produits détectés avant
-                de remplacer l'inventaire actuel.
-            </p>
+                <p>
+                    Corrigez les produits détectés avant
+                    de remplacer l'inventaire actuel.
+                </p>
+            </div>
+
+            <span
+                class="review-count"
+                id="review-count"
+            ></span>
         </div>
 
-        <span
-            class="review-count"
-            id="review-count"
-        ></span>
-    </div>
+        <div id="warnings"></div>
 
-    <div id="warnings"></div>
+        <div class="review-header">
+            <span>Produit</span>
+            <span>Catégorie</span>
+            <span>Quantité</span>
+            <span>Unité</span>
+            <span>Confiance</span>
+            <span></span>
+        </div>
 
-    <div class="review-header">
-        <span>Produit</span>
-        <span>Catégorie</span>
-        <span>Quantité</span>
-        <span>Unité</span>
-        <span>Confiance</span>
-        <span></span>
-    </div>
+        <div id="items"></div>
 
-    <div id="items"></div>
+        <div class="review-actions">
+            <button
+                type="button"
+                id="add-item"
+                class="button secondary"
+            >
+                + Ajouter un produit
+            </button>
 
-    <div class="review-actions">
-        <button
-            type="button"
-            id="add-item"
-            class="button secondary"
-        >
-            + Ajouter un produit
-        </button>
+            <button
+                type="button"
+                id="confirm"
+                class="button primary"
+            >
+                Confirmer l'inventaire
+            </button>
+        </div>
+    </section>
 
-        <button
-            type="button"
-            id="confirm"
-            class="button primary"
-        >
-            Confirmer l'inventaire
-        </button>
-    </div>
+    <article class="panel inventory-panel">
+        <div class="panel-header panel-header-row">
+            <div>
+                <h2>
+                    Inventaire actuel
+                </h2>
+
+                <p id="inventory-summary">
+                    Chargement...
+                </p>
+            </div>
+
+            <strong
+                class="inventory-count"
+                id="inventory-count"
+            >
+                —
+            </strong>
+        </div>
+
+        <div id="inventory-empty" hidden>
+            <div class="empty-state">
+                <strong>
+                    Aucun produit connu
+                </strong>
+
+                <span>
+                    Effectuez un premier scan du
+                    réfrigérateur.
+                </span>
+            </div>
+        </div>
+
+        <div id="inventory-groups"></div>
+    </article>
 </section>
 {% endblock %}
 
