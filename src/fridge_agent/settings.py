@@ -40,6 +40,14 @@ async def get_settings(
             """
         ).fetchall()
 
+        favorite_cuisines = connection.execute(
+            """
+            SELECT name
+            FROM favorite_cuisines
+            ORDER BY name
+            """
+        ).fetchall()
+
     liked_foods = [
         row["name"]
         for row in preferences
@@ -67,6 +75,10 @@ async def get_settings(
             ),
             "liked_foods": liked_foods,
             "avoided_foods": avoided_foods,
+            "favorite_cuisines": [
+                row["name"]
+                for row in favorite_cuisines
+            ],
             "notes": settings["notes"],
         }
     )
@@ -89,12 +101,16 @@ async def update_settings(
             text="Invalid household settings"
         ) from exception
 
-    liked_foods = _clean_food_list(
+    liked_foods = clean_preference_list(
         settings.liked_foods
     )
 
-    avoided_foods = _clean_food_list(
+    avoided_foods = clean_preference_list(
         settings.avoided_foods
+    )
+
+    favorite_cuisines = clean_preference_list(
+        settings.favorite_cuisines
     )
 
     with sqlite3.connect(database_path) as connection:
@@ -152,6 +168,22 @@ async def update_settings(
                 ],
             )
 
+            if "favorite_cuisines" in settings.model_fields_set:
+                connection.execute(
+                    "DELETE FROM favorite_cuisines"
+                )
+
+                connection.executemany(
+                    """
+                    INSERT INTO favorite_cuisines(name)
+                    VALUES (?)
+                    """,
+                    [
+                        (name,)
+                        for name in favorite_cuisines
+                    ],
+                )
+
             connection.commit()
 
         except Exception:
@@ -165,7 +197,7 @@ async def update_settings(
     )
 
 
-def _clean_food_list(
+def clean_preference_list(
     foods: list[str],
 ) -> list[str]:
     result = []

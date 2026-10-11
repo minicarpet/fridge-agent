@@ -203,7 +203,7 @@ Paramètres · Fridge Agent
                 </h2>
 
                 <p>
-                    Cuisines, ingrédients ou styles de plats à privilégier.
+                    Ingrédients ou styles de plats à privilégier.
                 </p>
             </div>
 
@@ -216,7 +216,7 @@ Paramètres · Fridge Agent
                 <input
                     id="liked-food-input"
                     type="text"
-                    placeholder="Ex. cuisine italienne"
+                    placeholder="Ex. aubergines, plats mijotés"
                 >
 
                 <button
@@ -261,6 +261,42 @@ Paramètres · Fridge Agent
                 </button>
             </div>
         </article>
+    </section>
+
+    <section class="panel settings-notes">
+        <div class="panel-header">
+            <h2>
+                Cuisines favorites
+            </h2>
+
+            <p>
+                Styles de cuisine à privilégier dans vos menus :
+                asiatique, mexicaine, thaïlandaise, etc.
+                Vous pourrez les ajuster pour chaque nouveau menu.
+            </p>
+        </div>
+
+        <div
+            id="favorite-cuisines"
+            class="tag-list"
+        ></div>
+
+        <div class="tag-input-row">
+            <input
+                id="favorite-cuisine-input"
+                type="text"
+                aria-label="Ajouter une cuisine favorite"
+                placeholder="Ex. thaïlandaise"
+            >
+
+            <button
+                type="button"
+                id="add-favorite-cuisine"
+                class="button secondary"
+            >
+                Ajouter
+            </button>
+        </div>
     </section>
 
     <section class="panel settings-notes">

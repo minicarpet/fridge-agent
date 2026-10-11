@@ -23,6 +23,9 @@ const generateButton =
 const startDateInput =
     document.getElementById("menu-start-date");
 
+const cuisinesInput =
+    document.getElementById("menu-cuisines");
+
 const generationStatus =
     document.getElementById("generation-status");
 
@@ -492,6 +495,29 @@ function setDefaultDate() {
 }
 
 
+async function loadCuisinePreferences() {
+    try {
+        const settings =
+            await fetchJson("/api/settings");
+
+        cuisinesInput.value =
+            settings.favorite_cuisines.join(", ");
+
+        cuisinesInput.disabled = false;
+        generateButton.disabled = false;
+
+    } catch (error) {
+        console.error(error);
+
+        errorElement.textContent =
+            "Impossible de charger les cuisines favorites. " +
+            "Rechargez la page avant de générer un menu.";
+
+        errorElement.hidden = false;
+    }
+}
+
+
 generateButton.addEventListener(
     "click",
     async () => {
@@ -510,6 +536,8 @@ generateButton.addEventListener(
         generateButton.disabled =
             true;
 
+        cuisinesInput.disabled = true;
+
         generationStatus.textContent =
             "Génération du menu par l'IA…";
 
@@ -525,7 +553,17 @@ generateButton.addEventListener(
                         startDateInput.value
                     ),
                     {
-                        method: "POST"
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            favorite_cuisines:
+                                cuisinesInput.value
+                                    .split(",")
+                                    .map(value => value.trim())
+                                    .filter(Boolean)
+                        })
                     }
                 );
 
@@ -558,6 +596,8 @@ generateButton.addEventListener(
         } finally {
             generateButton.disabled =
                 false;
+
+            cuisinesInput.disabled = false;
         }
     }
 );
@@ -705,4 +745,5 @@ dialog.addEventListener(
 
 
 setDefaultDate();
+loadCuisinePreferences();
 loadLatestPlan();

@@ -40,6 +40,10 @@ Rules:
 - Generate exactly the requested dates and meal types.
 - Respect avoided foods strictly.
 - Favor liked foods and cuisines when practical.
+- Use favorite_cuisines as preferred culinary styles, not strict requirements.
+- If favorite_cuisines is empty, do not impose a cuisine preference.
+- Cuisine preferences must not override avoided foods, cooking-time limits,
+  or prioritizing ingredients already available.
 - Prioritize ingredients already present in the refrigerator or pantry.
 - Prefer using perishable refrigerator ingredients before pantry ingredients
   or buying alternatives.

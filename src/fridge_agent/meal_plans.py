@@ -12,11 +12,14 @@ from datetime import (
 from pathlib import Path
 
 from aiohttp import web
+from pydantic import ValidationError
 
+from fridge_agent.models import GenerateMealPlanRequest
 from fridge_agent.openai_client import (
     OpenAIError,
     generate_meal_plan,
 )
+from fridge_agent.settings import clean_preference_list
 
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +44,17 @@ async def generate_plan(
 
     start_date = _get_start_date(request)
 
+    try:
+        options = GenerateMealPlanRequest.model_validate(
+            await request.json()
+            if request.can_read_body
+            else {}
+        )
+    except (ValueError, ValidationError) as exception:
+        raise web.HTTPBadRequest(
+            text="Invalid meal plan preferences"
+        ) from exception
+
     with sqlite3.connect(database_path) as connection:
         connection.row_factory = sqlite3.Row
 
@@ -64,6 +78,14 @@ async def generate_plan(
             """
             SELECT preference_type, name
             FROM food_preferences
+            ORDER BY name
+            """
+        ).fetchall()
+
+        cuisine_rows = connection.execute(
+            """
+            SELECT name
+            FROM favorite_cuisines
             ORDER BY name
             """
         ).fetchall()
@@ -204,6 +226,14 @@ async def generate_plan(
             for row in preferences
             if row["preference_type"] == "avoid"
         ],
+        "favorite_cuisines": clean_preference_list(
+            options.favorite_cuisines
+            if options.favorite_cuisines is not None
+            else [
+                row["name"]
+                for row in cuisine_rows
+            ]
+        ),
         "inventory": [
             dict(row)
             for row in inventory

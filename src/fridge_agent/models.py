@@ -109,8 +109,16 @@ class HouseholdSettings(BaseModel):
 
     liked_foods: list[str]
     avoided_foods: list[str]
+    favorite_cuisines: list[str] = Field(default_factory=list)
 
     notes: str = ""
+
+
+class GenerateMealPlanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    favorite_cuisines: list[str] | None = None
+
 
 class MealIngredient(BaseModel):
     model_config = ConfigDict(extra="forbid")

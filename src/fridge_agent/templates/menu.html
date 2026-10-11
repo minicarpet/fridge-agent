@@ -69,10 +69,33 @@ Menu · Fridge Agent
                 type="button"
                 id="generate-menu"
                 class="button primary"
+                disabled
             >
                 Générer le menu
             </button>
         </div>
+    </div>
+
+    <div class="settings-section">
+        <label class="form-field">
+            <span>
+                Cuisines pour ce menu
+            </span>
+
+            <input
+                id="menu-cuisines"
+                type="text"
+                placeholder="Ex. asiatique, mexicaine, thaïlandaise"
+                aria-describedby="menu-cuisines-help"
+                disabled
+            >
+        </label>
+
+        <p id="menu-cuisines-help" class="page-description">
+            Séparez les cuisines par des virgules. Ce champ reprend vos
+            <a href="/settings">cuisines favorites</a> sans modifier vos
+            paramètres. Laissez-le vide pour ne privilégier aucune cuisine.
+        </p>
     </div>
 
     <div

@@ -1,5 +1,6 @@
 let likedFoods = [];
 let avoidedFoods = [];
+let favoriteCuisines = [];
 let settingsDirty = false;
 
 
@@ -187,6 +188,12 @@ function renderTags(
 
 function renderPreferences() {
     renderTags(
+        "favorite-cuisines",
+        favoriteCuisines,
+        "like"
+    );
+
+    renderTags(
         "liked-foods",
         likedFoods,
         "like"
@@ -228,6 +235,21 @@ function addTagFromInput(
 
 document
     .getElementById(
+        "add-favorite-cuisine"
+    )
+    .addEventListener(
+        "click",
+        () => {
+            addTagFromInput(
+                "favorite-cuisine-input",
+                favoriteCuisines
+            );
+        }
+    );
+
+
+document
+    .getElementById(
         "add-liked-food"
     )
     .addEventListener(
@@ -260,6 +282,10 @@ for (const [
     inputId,
     collection
 ] of [
+    [
+        "favorite-cuisine-input",
+        favoriteCuisines
+    ],
     [
         "liked-food-input",
         likedFoods
@@ -345,13 +371,23 @@ async function loadSettings() {
         ).value =
             settings.notes ?? "";
 
-        likedFoods = [
+        likedFoods.splice(
+            0,
+            likedFoods.length,
             ...settings.liked_foods
-        ];
+        );
 
-        avoidedFoods = [
+        avoidedFoods.splice(
+            0,
+            avoidedFoods.length,
             ...settings.avoided_foods
-        ];
+        );
+
+        favoriteCuisines.splice(
+            0,
+            favoriteCuisines.length,
+            ...settings.favorite_cuisines
+        );
 
         renderPreferences();
         setDirty(false);
@@ -469,6 +505,9 @@ form.addEventListener(
 
             avoided_foods:
                 avoidedFoods,
+
+            favorite_cuisines:
+                favoriteCuisines,
 
             notes:
                 document.getElementById(

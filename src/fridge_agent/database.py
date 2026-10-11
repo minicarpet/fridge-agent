@@ -142,6 +142,15 @@ def initialize_database(data_dir: Path) -> Path:
 
         connection.execute(
             """
+            CREATE TABLE IF NOT EXISTS favorite_cuisines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.execute(
+            """
             INSERT OR IGNORE INTO household_settings(
                 id,
                 people,
